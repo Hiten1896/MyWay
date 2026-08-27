@@ -61,6 +61,8 @@ npm run server:dev
 ```
 The backend runs at `http://localhost:3000`.
 
+For the split deployment, deploy the backend as a Render Web Service using the included `render.yaml` or the Dockerfile. Set `CLIENT_ORIGIN` to `https://hiten1896.github.io` (or your GitHub Pages origin). Then add the backend URL as the GitHub repository variable `RENDER_API_URL`; the Pages workflow injects it into the Music client during its build.
+
 For a production-style run that serves the app and backend together:
 ```bash
 npm start

@@ -1,4 +1,5 @@
-const API_BASE_URL = window.MYWAY_API_BASE_URL || (location.port === '3000' ? '' : 'http://localhost:3000');
+const API_BASE_URL = window.MYWAY_API_BASE_URL
+    || (location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://<your-render-service>.onrender.com');
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
 const suggestionBox = document.getElementById('suggestion-box');
@@ -32,44 +33,66 @@ let repeatEnabled = false;
 let shuffleEnabled = false;
 let suggestionRequestId = 0;
 let suggestionTimer = null;
-const audio = new Audio();
-audio.preload = 'none';
+let streamRequestController = null;
+let streamRequestId = 0;
+let audio;
 
-audio.addEventListener('ended', () => {
-    if (repeatEnabled && currentTrack) {
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-        return;
-    }
-    if (queue.length > 1) {
-        playTrackAt((currentIndex + 1) % queue.length);
-        return;
-    }
-    isPlaying = false;
-    updatePlayerControls();
-});
+function createAudioPlayer() {
+    const player = new Audio();
+    player.preload = 'none';
 
-audio.addEventListener('error', () => {
-    isPlaying = false;
-    updatePlayerButton();
-});
-
-audio.addEventListener('loadedmetadata', () => {
-    const duration = Math.floor(audio.duration) || 0;
-    musicExpandedDuration.textContent = formatTime(duration);
-    [musicPlayerSeek, musicExpandedSeek].forEach(seek => {
-        seek.max = duration;
-        seek.value = 0;
+    player.addEventListener('ended', () => {
+        if (player !== audio) return;
+        if (repeatEnabled && currentTrack) {
+            player.currentTime = 0;
+            player.play().catch(() => {});
+            return;
+        }
+        if (queue.length > 1) {
+            playTrackAt((currentIndex + 1) % queue.length);
+            return;
+        }
+        isPlaying = false;
+        updatePlayerControls();
     });
-});
 
-audio.addEventListener('timeupdate', () => {
-    if (!audio.duration) return;
-    const position = Math.floor(audio.currentTime);
-    [musicPlayerSeek, musicExpandedSeek].forEach(seek => {
-        if (document.activeElement !== seek) seek.value = position;
+    player.addEventListener('error', () => {
+        if (player === audio) {
+            isPlaying = false;
+            updatePlayerButton();
+        }
     });
-});
+
+    player.addEventListener('loadedmetadata', () => {
+        if (player !== audio) return;
+        const duration = Math.floor(player.duration) || 0;
+        musicExpandedDuration.textContent = formatTime(duration);
+        [musicPlayerSeek, musicExpandedSeek].forEach(seek => {
+            seek.max = duration;
+            seek.value = 0;
+        });
+    });
+
+    player.addEventListener('timeupdate', () => {
+        if (player !== audio || !player.duration) return;
+        const position = Math.floor(player.currentTime);
+        [musicPlayerSeek, musicExpandedSeek].forEach(seek => {
+            if (document.activeElement !== seek) seek.value = position;
+        });
+    });
+
+    return player;
+}
+
+audio = createAudioPlayer();
+
+function replaceAudioPlayer() {
+    const previousAudio = audio;
+    previousAudio.pause();
+    previousAudio.removeAttribute('src');
+    previousAudio.load();
+    audio = createAudioPlayer();
+}
 
 function inMusicSection() {
     return document.body.classList.contains('music-section-active');
@@ -232,6 +255,11 @@ async function playTrackAt(index) {
 
 async function loadTrack(track) {
     currentTrack = track;
+    const requestId = ++streamRequestId;
+    streamRequestController?.abort();
+    streamRequestController = track.id ? new AbortController() : null;
+    replaceAudioPlayer();
+    isPlaying = false;
     musicPlayer.hidden = false;
     updatePlayerControls();
 
@@ -242,13 +270,22 @@ async function loadTrack(track) {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/stream?id=${encodeURIComponent(track.id)}`);
+        const response = await fetch(`${API_BASE_URL}/api/stream?id=${encodeURIComponent(track.id)}`, {
+            signal: streamRequestController.signal
+        });
+        if (requestId !== streamRequestId) return;
         if (!response.ok) throw new Error('Stream lookup failed');
         const data = await response.json();
+        if (requestId !== streamRequestId) return;
         audio.src = data.url;
         await audio.play();
+        if (requestId !== streamRequestId) {
+            audio.pause();
+            return;
+        }
         isPlaying = true;
     } catch (error) {
+        if (error.name === 'AbortError' || requestId !== streamRequestId) return;
         console.error('Track playback failed:', error);
         isPlaying = false;
     }
