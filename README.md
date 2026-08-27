@@ -2,7 +2,7 @@
 
 A single-page movie discovery app built on the [TMDB API](https://www.themoviedb.org/documentation/api) — with one deliberate twist. Most TMDB demo apps default to Hollywood-only listings. MyWay doesn't: every section — the home "Spotlight," genre categories, and search results — **interleaves popular English and Hindi cinema 50/50**, giving Bollywood and Hollywood equal real estate.
 
-**[🔗 Live Demo](#)** *(add your GitHub Pages link here once deployed)*
+**[🔗 Live Demo](https://hiten1896.github.io/MyWay/)**
 
 ---
 
