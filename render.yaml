@@ -3,7 +3,7 @@ services:
     name: myway-backend
     runtime: docker
     plan: free
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     envVars:
       - key: CLIENT_ORIGIN
