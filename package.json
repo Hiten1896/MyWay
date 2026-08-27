@@ -2,11 +2,13 @@
   "name": "myway",
   "version": "1.0.0",
   "description": "A single-page movie discovery app built on the [TMDB API](https://www.themoviedb.org/documentation/api). It was built as a 3rd-semester project, with one distinguishing idea: instead of showing only Hollywood movies (the default for most TMDB demo apps), every section of the app **deliberately interleaves popular English and Hindi cinema 50/50** — a home \"Spotlight,\" genre categories, and search results all give equal real estate to Bollywood and Hollywood.",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-  "dev": "vite",
-  "build": "vite build"
-},
+    "dev": "vite",
+    "build": "vite build",
+    "server:dev": "nodemon server.js",
+    "start": "node server.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Hiten1896/myway.git"
@@ -20,11 +22,13 @@
   },
   "homepage": "https://github.com/Hiten1896/myway#readme",
   "devDependencies": {
+    "nodemon": "^3.1.14",
     "vite": "^8.2.1"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "yt-dlp-exec": "^1.0.2",
+    "yt-search": "^2.13.1"
   }
 }
-
-
-
-
-

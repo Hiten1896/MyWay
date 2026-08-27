@@ -24,6 +24,7 @@ A single-page movie discovery app built on the [TMDB API](https://www.themoviedb
 | Styling | [Tailwind CSS (CDN)](https://tailwindcss.com/) layered under a custom CSS design system in `index.html` |
 | Data | [TMDB API](https://www.themoviedb.org/documentation/api) — posters, cast, trailers, metadata |
 | Storage | Browser `localStorage` for the watchlist — no database, no accounts |
+| Music backend | Express, `yt-search`, and `yt-dlp-exec` for YouTube search and audio stream URLs |
 
 ## 🚀 Getting Started
 
@@ -54,7 +55,16 @@ npm install
 ```bash
 npm run dev
 ```
-Vite will start a local dev server and print the URL to open (typically `http://localhost:5173`).
+Vite will start a local client server and print the URL to open (typically `http://localhost:5173`). For Music search and playback, run the backend in a second terminal:
+```bash
+npm run server:dev
+```
+The backend runs at `http://localhost:3000`.
+
+For a production-style run that serves the app and backend together:
+```bash
+npm start
+```
 
 **6. Build for production**
 ```bash
@@ -66,10 +76,12 @@ npm run build
 ```
 myway/
 ├── index.html          # Markup entry point
+├── server.js            # Express YouTube search/stream backend
+├── js/app.js            # Music search and playback client
 ├── env.js                # Optional environment/config loading helper
 ├── config.js            # Your real API key (created locally)
 ├── config.example.js    # Template for config.js — safe to commit
-├── css/ , js/            # Supporting Firebase/assets
+├── css/ , js/            # Supporting Firebase and client assets
 ├── manifest.json         # PWA manifest
 ├── sw.js                 # Service worker
 ├── package.json           # Project metadata and Vite scripts
