@@ -1,10 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const apiBase = process.env.RENDER_API_URL || process.env.VITE_BACKEND_URL || process.env.MYWAY_API_BASE_URL || '';
+const apiKey = process.env.VITE_TMDB_API_KEY || process.env.TMDB_API_KEY || '';
+const apiBase = process.env.VITE_BACKEND_URL || process.env.RENDER_API_URL || process.env.MYWAY_API_BASE_URL || '';
 
 const config = [
-    `window.TMDB_API_KEY = ${JSON.stringify(process.env.TMDB_API_KEY || '')};`,
+    `window.TMDB_API_KEY = ${JSON.stringify(apiKey)};`,
     `window.MYWAY_API_BASE = ${JSON.stringify(apiBase)};`
 ].join('\n');
 
