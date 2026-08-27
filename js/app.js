@@ -114,6 +114,19 @@ function updatePlayerButton() {
         button.textContent = isPlaying ? '❚❚' : '▶';
         button.setAttribute('aria-label', label);
     });
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    }
+}
+
+function updateMediaSession() {
+    if (!('mediaSession' in navigator) || !currentTrack) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentTrack.title,
+        artist: currentTrack.artist,
+        album: 'MyWay Music',
+        artwork: currentTrack.thumbnail ? [{ src: currentTrack.thumbnail, sizes: '512x512' }] : []
+    });
 }
 
 function updatePlayerControls() {
@@ -126,6 +139,7 @@ function updatePlayerControls() {
         musicExpandedArt.style.backgroundImage = currentTrack.thumbnail ? `url("${currentTrack.thumbnail}")` : '';
         musicExpandedArt.textContent = currentTrack.thumbnail ? '' : '♫';
         musicExpandedArt.setAttribute('aria-label', `${currentTrack.title} artwork`);
+        updateMediaSession();
     }
     [musicPrevious, musicNext, musicPlayerPrevious, musicPlayerNext].forEach(button => {
         button.disabled = queue.length < 2;
@@ -457,5 +471,23 @@ musicShuffle?.addEventListener('click', () => {
     musicShuffle.setAttribute('aria-label', `Shuffle ${shuffleEnabled ? 'on' : 'off'}`);
 });
 
-window.addEventListener('beforeunload', () => audio.pause());
+if ('mediaSession' in navigator) {
+    const mediaActions = {
+        play: () => togglePlayback(),
+        pause: () => togglePlayback(),
+        previoustrack: () => musicPrevious?.click(),
+        nexttrack: () => musicNext?.click(),
+        seekbackward: () => seekTo(Math.max(0, audio.currentTime - 10)),
+        seekforward: () => seekTo(Math.min(audio.duration || 0, audio.currentTime + 10))
+    };
+
+    Object.entries(mediaActions).forEach(([action, handler]) => {
+        try {
+            navigator.mediaSession.setActionHandler(action, handler);
+        } catch (error) {
+            console.warn(`Media Session action not supported: ${action}`);
+        }
+    });
+}
+
 bindCuratedTracks();

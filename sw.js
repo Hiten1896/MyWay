@@ -1,9 +1,13 @@
-const CACHE_NAME = 'myway-shell-v1';
+const CACHE_NAME = 'myway-shell-v2';
 const APP_SHELL = [
   './',
   './index.html',
   './config.js',
-  './manifest.json'
+  './manifest.json',
+  './js/config.js',
+  './js/app.js',
+  './icons/icon-192.svg',
+  './icons/icon-512.svg'
 ];
 
 self.addEventListener('install', (event) => {

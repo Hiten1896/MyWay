@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="MyWay — discover popular Hollywood and Bollywood movies side by side, search, and build your own watchlist. Powered by TMDB.">
     <meta name="theme-color" content="#8A2BE2">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>MyWay</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
     <link rel="manifest" href="manifest.json">
@@ -1380,7 +1383,7 @@
         .music-hero-note { display: none; }
         .music-content-grid { grid-template-columns: 1fr; }
         .music-album-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .music-player { right: 12px; bottom: 12px; left: 12px; gap: 10px; }
+        .music-player { right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); left: 12px; gap: 10px; }
         .music-progress { display: none; }
         .music-player .music-transport { width: 34px; height: 34px; padding: 0; }
         .music-player .music-seek { min-width: 70px; }
@@ -1440,8 +1443,8 @@
 
     <nav id="category-nav">
         <div class="section-primary-nav max-w-4xl mx-auto flex justify-center" role="tablist" aria-label="Media sections">
-            <button id="movies-section-tab" class="nav-tab active" type="button" role="tab" aria-selected="true">Movies</button>
-            <button id="music-section-tab" class="nav-tab" type="button" role="tab" aria-selected="false">Music</button>
+            <button id="music-section-tab" class="nav-tab active" type="button" role="tab" aria-selected="true">Music</button>
+            <button id="movies-section-tab" class="nav-tab" type="button" role="tab" aria-selected="false">Movies</button>
         </div>
         <div class="section-page-nav movie-page-nav max-w-4xl mx-auto flex justify-center">
             <button id="home-tab" class="nav-tab page-nav-tab active" data-view="home">Home</button>
@@ -2832,8 +2835,8 @@
         if (API_KEY) {
             await fetchGenreMap();
         }
-        switchSection('movies');
         renderView('home');
+        switchSection('music');
     }
 
     init();

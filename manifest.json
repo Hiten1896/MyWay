@@ -1,17 +1,18 @@
 {
   "name": "MyWay",
   "short_name": "MyWay",
-  "description": "Discover popular English & Hindi movies side-by-side with 50/50 balanced recommendations, search, and personal watchlist.",
-  "start_url": "./index.html",
+  "description": "Discover movies and listen to music in one focused app.",
+  "id": "./",
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
   "background_color": "#F0F2F5",
   "theme_color": "#8A2BE2",
   "icons": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml"
-    }
+    { "src": "icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "icons/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }
 
