@@ -1,9 +1,12 @@
-const API_BASE_URL = window.MYWAY_API_BASE_URL
-    || (location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://<your-render-service>.onrender.com');
+const API_BASE = window.MYWAY_API_BASE
+    || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000/api'
+        : 'https://<YOUR-RENDER-APP-NAME>.onrender.com/api');
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
 const suggestionBox = document.getElementById('suggestion-box');
 const musicResults = document.getElementById('music-results');
+const musicSectionTab = document.getElementById('music-section-tab');
 const musicPlayer = document.getElementById('music-player');
 const musicPlayerTitle = document.getElementById('music-player-title');
 const musicPlayerArtist = document.getElementById('music-player-artist');
@@ -24,6 +27,11 @@ const musicPrevious = document.getElementById('music-previous');
 const musicNext = document.getElementById('music-next');
 const musicRepeat = document.getElementById('music-repeat');
 const musicShuffle = document.getElementById('music-shuffle');
+const musicHomeTab = document.getElementById('music-home-tab');
+const musicLikedTab = document.getElementById('music-liked-tab');
+const musicHomeView = document.getElementById('music-home-view');
+const musicLikedView = document.getElementById('music-liked-view');
+const musicLikedList = document.getElementById('music-liked-list');
 
 let currentTrack = null;
 let queue = [];
@@ -31,6 +39,7 @@ let currentIndex = -1;
 let isPlaying = false;
 let repeatEnabled = false;
 let shuffleEnabled = false;
+let musicView = 'home';
 let suggestionRequestId = 0;
 let suggestionTimer = null;
 let streamRequestController = null;
@@ -144,19 +153,21 @@ function renderSearchResults(videos) {
         return;
     }
 
-    grid.innerHTML = videos.map(video => `
-        <article class="music-album-card">
-            <img class="music-album-art" src="${escapeHtml(video.thumbnail)}" alt="" loading="lazy">
-            <div class="music-album-info">
-                <h4>${escapeHtml(video.title)}</h4>
-                <p>${escapeHtml(video.artist)}${video.duration ? ` · ${escapeHtml(video.duration)}` : ''}</p>
-                <button class="music-play-btn" type="button" data-video-id="${video.id}" data-track="${escapeHtml(video.title)}" data-artist="${escapeHtml(video.artist)}" aria-label="Play ${escapeHtml(video.title)}">▶</button>
-            </div>
+    grid.className = 'music-song-list music-album-grid';
+    grid.innerHTML = videos.map((video, index) => `
+        <article class="music-song-card">
+            <img class="music-song-cover" src="${escapeHtml(video.thumbnail)}" alt="" loading="lazy">
+            <div class="music-song-copy"><strong>${escapeHtml(video.title)}</strong><small>${escapeHtml(video.artist)}${video.duration ? ` · ${escapeHtml(video.duration)}` : ''}</small></div>
+            <button class="music-like-btn ${isLiked(video) ? 'active' : ''}" type="button" data-like-index="${index}" aria-label="${isLiked(video) ? 'Remove' : 'Add'} ${escapeHtml(video.title)} ${isLiked(video) ? 'from' : 'to'} liked songs">${isLiked(video) ? '♥' : '♡'}</button>
+            <button class="music-play-btn" type="button" data-play-index="${index}" aria-label="Play ${escapeHtml(video.title)}">▶</button>
         </article>
     `).join('');
 
-    grid.querySelectorAll('.music-play-btn').forEach((button, index) => {
-        button.addEventListener('click', () => playTrackAt(index));
+    grid.querySelectorAll('[data-play-index]').forEach(button => {
+        button.addEventListener('click', () => playTrackAt(Number(button.dataset.playIndex)));
+    });
+    grid.querySelectorAll('[data-like-index]').forEach(button => {
+        button.addEventListener('click', () => toggleLike(videos[Number(button.dataset.likeIndex)]));
     });
 }
 
@@ -170,7 +181,7 @@ function escapeHtml(value) {
 }
 
 async function searchMusic(query) {
-    const response = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(query)}`);
+    const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
     if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || 'Music search failed');
@@ -178,6 +189,7 @@ async function searchMusic(query) {
     const data = await response.json();
     queue = data.videos || [];
     currentIndex = -1;
+    switchMusicView('home');
     renderSearchResults(queue);
 }
 
@@ -185,6 +197,67 @@ function closeMusicSuggestions() {
     if (!suggestionBox) return;
     suggestionBox.innerHTML = '';
     suggestionBox.style.display = 'none';
+}
+
+function getLikedSongs() {
+    try {
+        return JSON.parse(localStorage.getItem('myway_music_liked')) || [];
+    } catch (error) {
+        return [];
+    }
+}
+
+function isLiked(video) {
+    return getLikedSongs().some(song => song.id === video.id);
+}
+
+function toggleLike(video) {
+    const likedSongs = getLikedSongs();
+    const nextSongs = isLiked(video)
+        ? likedSongs.filter(song => song.id !== video.id)
+        : [...likedSongs, video];
+    localStorage.setItem('myway_music_liked', JSON.stringify(nextSongs));
+    if (musicView === 'liked') renderLikedSongs();
+    if (queue.some(song => song.id === video.id)) renderSearchResults(queue);
+}
+
+function renderLikedSongs() {
+    const likedSongs = getLikedSongs();
+    if (!likedSongs.length) {
+        musicLikedList.innerHTML = '<p class="music-empty-state">Songs you like will appear here.</p>';
+        return;
+    }
+
+    musicLikedList.innerHTML = likedSongs.map((song, index) => `
+        <article class="music-song-card">
+            <img class="music-song-cover" src="${escapeHtml(song.thumbnail)}" alt="" loading="lazy">
+            <div class="music-song-copy"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(song.artist)}${song.duration ? ` · ${escapeHtml(song.duration)}` : ''}</small></div>
+            <button class="music-like-btn active" type="button" data-liked-index="${index}" aria-label="Remove ${escapeHtml(song.title)} from liked songs">♥</button>
+            <button class="music-play-btn" type="button" data-liked-play-index="${index}" aria-label="Play ${escapeHtml(song.title)}">▶</button>
+        </article>
+    `).join('');
+
+    musicLikedList.querySelectorAll('[data-liked-play-index]').forEach(button => {
+        button.addEventListener('click', () => {
+            queue = getLikedSongs();
+            playTrackAt(Number(button.dataset.likedPlayIndex));
+        });
+    });
+    musicLikedList.querySelectorAll('[data-liked-index]').forEach(button => {
+        button.addEventListener('click', () => toggleLike(likedSongs[Number(button.dataset.likedIndex)]));
+    });
+}
+
+function switchMusicView(viewName) {
+    musicView = viewName;
+    const showingLiked = viewName === 'liked';
+    musicHomeView.hidden = showingLiked;
+    musicLikedView.hidden = !showingLiked;
+    musicHomeTab.classList.toggle('active', !showingLiked);
+    musicLikedTab.classList.toggle('active', showingLiked);
+    musicHomeTab.setAttribute('aria-selected', String(!showingLiked));
+    musicLikedTab.setAttribute('aria-selected', String(showingLiked));
+    if (showingLiked) renderLikedSongs();
 }
 
 async function fetchMusicSuggestions(query) {
@@ -195,7 +268,7 @@ async function fetchMusicSuggestions(query) {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(query)}`);
+        const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
         if (!response.ok) throw new Error('Music suggestions failed');
         const data = await response.json();
         if (requestId !== suggestionRequestId || !inMusicSection()) return;
@@ -232,6 +305,10 @@ function bindCuratedTracks() {
         });
     });
 }
+
+musicHomeTab.addEventListener('click', () => switchMusicView('home'));
+musicLikedTab.addEventListener('click', () => switchMusicView('liked'));
+musicSectionTab.addEventListener('click', () => switchMusicView('home'));
 
 async function playTrack(track) {
     currentTrack = track;
@@ -270,7 +347,7 @@ async function loadTrack(track) {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/stream?id=${encodeURIComponent(track.id)}`, {
+        const response = await fetch(`${API_BASE}/stream?id=${encodeURIComponent(track.id)}`, {
             signal: streamRequestController.signal
         });
         if (requestId !== streamRequestId) return;
