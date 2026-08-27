@@ -3,6 +3,7 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL
     || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:3000/api'
         : 'https://<YOUR-RENDER-APP-NAME>.onrender.com/api');
+const BACKEND_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
 const suggestionBox = document.getElementById('suggestion-box');
@@ -33,6 +34,8 @@ const musicLikedTab = document.getElementById('music-liked-tab');
 const musicHomeView = document.getElementById('music-home-view');
 const musicLikedView = document.getElementById('music-liked-view');
 const musicLikedList = document.getElementById('music-liked-list');
+const backendStatus = document.getElementById('backend-status');
+const backendStatusLabel = document.getElementById('backend-status-label');
 
 let currentTrack = null;
 let queue = [];
@@ -43,6 +46,7 @@ let shuffleEnabled = false;
 let musicView = 'home';
 let suggestionRequestId = 0;
 let suggestionTimer = null;
+let backendStatusTimer = null;
 let streamRequestController = null;
 let streamRequestId = 0;
 let audio;
@@ -160,7 +164,7 @@ function seekTo(value) {
 }
 
 function renderSearchResults(videos) {
-    const grid = document.querySelector('.music-album-grid');
+    const grid = document.getElementById('music-discovery-list');
     if (!grid) return;
 
     if (videos.length === 0) {
@@ -168,7 +172,7 @@ function renderSearchResults(videos) {
         return;
     }
 
-    grid.className = 'music-song-list music-album-grid';
+    grid.className = 'music-song-list';
     grid.innerHTML = videos.map((video, index) => `
         <article class="music-song-card">
             <img class="music-song-cover" src="${escapeHtml(video.thumbnail)}" alt="" loading="lazy">
@@ -219,6 +223,23 @@ async function loadTrendingMusic() {
     } catch (error) {
         console.error('Trending music failed:', error);
     }
+}
+
+async function checkBackendStatus() {
+    try {
+        const response = await fetch(`${BACKEND_ORIGIN}/health`, { cache: 'no-store' });
+        const online = response.ok;
+        backendStatus.classList.toggle('online', online);
+        backendStatusLabel.textContent = online ? 'Online' : 'Offline';
+    } catch (error) {
+        backendStatus.classList.remove('online');
+        backendStatusLabel.textContent = 'Offline';
+    }
+}
+
+function startBackendStatusMonitor() {
+    checkBackendStatus();
+    backendStatusTimer = window.setInterval(checkBackendStatus, 30000);
 }
 
 function closeMusicSuggestions() {
@@ -305,7 +326,6 @@ async function fetchMusicSuggestions(query) {
         suggestionBox.innerHTML = suggestions.map(video => `
             <button class="suggestion-item music-suggestion-item" type="button">
                 <strong>${escapeHtml(video.title)}</strong>
-                <span>${escapeHtml(video.artist)}${video.duration ? ` · ${escapeHtml(video.duration)}` : ''}</span>
             </button>
         `).join('');
         suggestionBox.style.display = suggestions.length ? 'block' : 'none';
@@ -340,6 +360,12 @@ async function playTrack(track) {
 
 async function playTrackAt(index) {
     if (!queue[index]) return;
+    const selectedTrack = queue[index];
+    const artistQueue = queue.filter(track => track.artist === selectedTrack.artist);
+    if (artistQueue.length > 1) {
+        queue = artistQueue;
+        index = queue.findIndex(track => track.id === selectedTrack.id);
+    }
     if (shuffleEnabled && queue.length > 1) {
         index = Math.floor(Math.random() * queue.length);
     }
@@ -495,3 +521,4 @@ if ('mediaSession' in navigator) {
 }
 
 loadTrendingMusic();
+startBackendStatusMonitor();

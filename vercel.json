@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run vercel-build",
-  "outputDirectory": "dist",
+  "outputDirectory": "frontend/dist",
   "cleanUrls": true,
   "trailingSlash": false
 }

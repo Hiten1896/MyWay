@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY . .
+COPY backend ./backend
 
 EXPOSE 7860
 

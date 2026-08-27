@@ -2,3 +2,4 @@ node_modules
 .git
 .env
 npm-debug.log
+frontend/config.js

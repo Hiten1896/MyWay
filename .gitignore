@@ -1,6 +1,6 @@
 # Local secrets — never commit your real API key
 .env
-/config.js
+/frontend/config.js
 
 # OS / editor junk
 .DS_Store

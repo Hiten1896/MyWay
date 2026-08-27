@@ -6,4 +6,4 @@ const config = [
     `window.MYWAY_API_BASE = ${JSON.stringify(process.env.VITE_BACKEND_URL || '')};`
 ].join('\n');
 
-fs.writeFileSync(path.join(__dirname, '..', 'dist', 'config.js'), `${config}\n`);
+fs.writeFileSync(path.join(__dirname, '..', 'frontend', 'dist', 'config.js'), `${config}\n`);

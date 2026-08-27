@@ -79,7 +79,7 @@ Use the included `render.yaml` or create a Render Web Service with:
 - **Environment:** `PORT` is provided by Render automatically
 
 **7. Deploy the frontend to Vercel**
-Import the repository into Vercel and use the default static build settings. The included `vercel.json` enables clean URLs. Make sure the frontend API URL points to the deployed Render service before publishing.
+Import the repository into Vercel and use the included `vercel.json`. It builds the `frontend/` directory as a static site. Make sure the frontend API URL points to the deployed Render service before publishing.
 
 **8. Run the combined server locally**
 ```bash
@@ -96,20 +96,21 @@ npm run build
 
 ```
 myway/
-├── index.html          # Markup entry point
-├── server.js            # Express YouTube search/stream backend
-├── js/app.js            # Music search, playback, and likes client
-├── js/config.js          # Frontend API URL override
-├── env.js                # Optional environment/config loading helper
-├── config.js            # Your real API key (created locally)
-├── config.example.js    # Template for config.js — safe to commit
-├── Dockerfile            # Render backend container definition
+├── frontend/             # Vercel static frontend
+│   ├── index.html        # Markup entry point
+│   ├── js/               # Music client and Firebase assets
+│   ├── css/              # Supporting styles
+│   ├── icons/            # PWA icons
+│   ├── config.js         # Local runtime config (ignored)
+│   ├── manifest.json     # PWA manifest
+│   └── sw.js             # Service worker
+├── backend/              # Render Node.js API service
+│   ├── server.js         # YouTube search/stream backend
+│   └── Dockerfile        # Render container definition
+├── scripts/              # Deployment helper scripts
 ├── render.yaml           # Render service configuration
-├── vercel.json            # Vercel frontend configuration
+├── vercel.json           # Vercel frontend configuration
 ├── .github/workflows/    # GitHub Actions workflows
-├── css/ , js/            # Supporting Firebase and client assets
-├── manifest.json         # PWA manifest
-├── sw.js                 # Service worker
 ├── package.json           # Project metadata and Vite scripts
 └── .gitignore
 ```

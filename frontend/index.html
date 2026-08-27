@@ -1130,6 +1130,27 @@
         gap: 18px;
     }
 
+    .backend-status-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        color: var(--color-text-main);
+        background: var(--color-bg-primary);
+        border: 1px solid var(--color-border);
+        border-radius: 20px;
+        cursor: default;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .backend-status-dot { width: 9px; height: 9px; background: #DC2626; border-radius: 50%; }
+    .backend-status-btn.online .backend-status-dot { background: #16A34A; }
+
+    header { padding-top: 0.85rem; padding-bottom: 1.1rem; }
+    header h1 { line-height: 1.1; }
+    .search-container { margin-top: 18px; }
+
     .music-album-card {
         overflow: hidden;
         color: var(--color-text-main);
@@ -1418,7 +1439,11 @@
 <body>
     
     <header>
-        <div class="header-top-bar flex justify-end">
+        <div class="header-top-bar flex justify-between">
+            <button id="backend-status" class="backend-status-btn" type="button" aria-live="polite" title="Music backend status">
+                <span class="backend-status-dot" aria-hidden="true"></span>
+                <span id="backend-status-label">Offline</span>
+            </button>
             <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Dark Mode">
                 <span id="theme-toggle-icon">🌙</span>
                 <span id="theme-toggle-label">Dark Mode</span>
@@ -1519,32 +1544,7 @@
                     <h3 id="mixes-title">Made for you</h3>
                     <span>Handpicked mixes</span>
                 </div>
-                <div class="music-album-grid">
-                    <article class="music-album-card">
-                        <div class="music-album-art" aria-hidden="true">◒</div>
-                        <div class="music-album-info"><h4>Morning Motion</h4><p>MyWay Mix</p><button class="music-play-btn" type="button" data-track="Morning Motion" data-artist="MyWay Mix" aria-label="Play Morning Motion">▶</button></div>
-                    </article>
-                    <article class="music-album-card">
-                        <div class="music-album-art" aria-hidden="true">✦</div>
-                        <div class="music-album-info"><h4>Indie Afterglow</h4><p>MyWay Mix</p><button class="music-play-btn" type="button" data-track="Indie Afterglow" data-artist="MyWay Mix" aria-label="Play Indie Afterglow">▶</button></div>
-                    </article>
-                    <article class="music-album-card">
-                        <div class="music-album-art" aria-hidden="true">◉</div>
-                        <div class="music-album-info"><h4>Desi Pulse</h4><p>MyWay Mix</p><button class="music-play-btn" type="button" data-track="Desi Pulse" data-artist="MyWay Mix" aria-label="Play Desi Pulse">▶</button></div>
-                    </article>
-                    <article class="music-album-card">
-                        <div class="music-album-art" aria-hidden="true">⌁</div>
-                        <div class="music-album-info"><h4>Deep Focus</h4><p>MyWay Mix</p><button class="music-play-btn" type="button" data-track="Deep Focus" data-artist="MyWay Mix" aria-label="Play Deep Focus">▶</button></div>
-                    </article>
-                    <article class="music-album-card">
-                        <div class="music-album-art" aria-hidden="true">♩</div>
-                        <div class="music-album-info"><h4>Rainy Day Radio</h4><p>MyWay Mix</p><button class="music-play-btn" type="button" data-track="Rainy Day Radio" data-artist="MyWay Mix" aria-label="Play Rainy Day Radio">▶</button></div>
-                    </article>
-                    <article class="music-album-card">
-                        <div class="music-album-art" aria-hidden="true">∞</div>
-                        <div class="music-album-info"><h4>Night Drive</h4><p>MyWay Mix</p><button class="music-play-btn" type="button" data-track="Night Drive" data-artist="MyWay Mix" aria-label="Play Night Drive">▶</button></div>
-                    </article>
-                </div>
+                <div id="music-discovery-list" class="music-album-grid music-song-list"><p class="music-empty-state">Loading today's trending songs...</p></div>
             </section>
 
             <aside class="music-queue" aria-labelledby="queue-title">
@@ -2389,7 +2389,7 @@
         pageNav.hidden = isMusic;
         movieResults.hidden = isMusic;
         musicResults.hidden = !isMusic;
-        musicPlayer.hidden = !isMusic;
+        if (!isMusic) musicPlayer.hidden = true;
         searchInput.placeholder = isMusic ? 'Search for song...' : 'Search for a movie title...';
         closeAllLists();
         searchInput.value = '';

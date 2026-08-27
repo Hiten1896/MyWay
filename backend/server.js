@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const ytSearch = require('yt-search');
 const ytDlp = require('yt-dlp-exec');
 
@@ -9,12 +8,16 @@ const PORT = Number(process.env.PORT) || 3000;
 const YTDLP_TIMEOUT_MS = 30_000;
 const MUSIC_SEARCH_SUFFIX = ' official song music audio';
 const TRENDING_MUSIC_QUERY = 'trending songs today official music audio';
+const TRENDING_MUSIC_QUERIES = [
+    'trending songs today official music audio',
+    'new music releases today official song',
+    'top songs this week official music video'
+];
 const NON_MUSIC_PATTERN = /\b(podcast|interview|reaction|review|commentary|news|vlog|episode|talk show|livestream|live stream|gameplay|gaming|trailer|teaser|shorts?|tutorial|documentary|prank|challenge|unboxing|influencer)\b/i;
 const MUSIC_PATTERN = /\b(official (music )?(video|audio)|music video|lyrics?|audio|song|soundtrack|remix|karaoke|instrumental|cover|acoustic|slowed|sped up|nightcore|visualizer|mixtape|album)\b/i;
 
 app.use(cors());
 app.use(express.json({ limit: '16kb' }));
-app.use(express.static(__dirname));
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
@@ -83,7 +86,15 @@ async function searchWithFallback(query) {
 app.get('/api/trending', async (req, res) => {
     const today = new Date().toISOString().slice(0, 10);
     try {
-        const videos = await searchWithFallback(`${TRENDING_MUSIC_QUERY} ${today}`);
+        const resultSets = await Promise.all(
+            TRENDING_MUSIC_QUERIES.map(query => searchWithFallback(`${query} ${today}`))
+        );
+        const seenIds = new Set();
+        const videos = resultSets.flat().filter(video => {
+            if (seenIds.has(video.id)) return false;
+            seenIds.add(video.id);
+            return true;
+        }).slice(0, 15);
         res.json({ date: today, videos });
     } catch (error) {
         console.error('Trending music lookup failed:', error.message);
@@ -132,10 +143,6 @@ app.get('/api/stream', async (req, res) => {
         console.error('YouTube stream lookup failed:', error.message);
         res.status(502).json({ error: 'Unable to prepare this track for playback.' });
     }
-});
-
-app.get(/^(?!\/api).*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
