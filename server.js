@@ -8,6 +8,7 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const YTDLP_TIMEOUT_MS = 30_000;
 const MUSIC_SEARCH_SUFFIX = ' official song music audio';
+const TRENDING_MUSIC_QUERY = 'trending songs today official music audio';
 const NON_MUSIC_PATTERN = /\b(podcast|interview|reaction|review|commentary|news|vlog|episode|talk show|livestream|live stream|gameplay|gaming|trailer|teaser|shorts?|tutorial|documentary|prank|challenge|unboxing|influencer)\b/i;
 const MUSIC_PATTERN = /\b(official (music )?(video|audio)|music video|lyrics?|audio|song|soundtrack|remix|karaoke|instrumental|cover|acoustic|slowed|sped up|nightcore|visualizer|mixtape|album)\b/i;
 
@@ -78,6 +79,17 @@ async function searchWithFallback(query) {
         return onlyMusic((result.entries || []).filter(video => video.id).map(normalizeDlpVideo));
     }
 }
+
+app.get('/api/trending', async (req, res) => {
+    const today = new Date().toISOString().slice(0, 10);
+    try {
+        const videos = await searchWithFallback(`${TRENDING_MUSIC_QUERY} ${today}`);
+        res.json({ date: today, videos });
+    } catch (error) {
+        console.error('Trending music lookup failed:', error.message);
+        res.status(502).json({ error: 'Unable to load trending music right now.' });
+    }
+});
 
 app.get('/api/search', async (req, res) => {
     const query = getQuery(req.query.q);

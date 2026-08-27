@@ -1,4 +1,5 @@
-const API_BASE = window.MYWAY_API_BASE
+const API_BASE = import.meta.env.VITE_BACKEND_URL
+    || window.MYWAY_API_BASE
     || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:3000/api'
         : 'https://<YOUR-RENDER-APP-NAME>.onrender.com/api');
@@ -207,6 +208,19 @@ async function searchMusic(query) {
     renderSearchResults(queue);
 }
 
+async function loadTrendingMusic() {
+    try {
+        const response = await fetch(`${API_BASE}/trending`);
+        if (!response.ok) throw new Error('Trending music request failed');
+        const data = await response.json();
+        queue = data.videos || [];
+        currentIndex = -1;
+        renderSearchResults(queue);
+    } catch (error) {
+        console.error('Trending music failed:', error);
+    }
+}
+
 function closeMusicSuggestions() {
     if (!suggestionBox) return;
     suggestionBox.innerHTML = '';
@@ -308,16 +322,6 @@ async function fetchMusicSuggestions(query) {
         if (requestId === suggestionRequestId) closeMusicSuggestions();
         console.error('Music suggestions failed:', error);
     }
-}
-
-function bindCuratedTracks() {
-    document.querySelectorAll('.music-play-btn:not([data-video-id])').forEach(button => {
-        button.addEventListener('click', () => {
-            currentTrack = { title: button.dataset.track, artist: button.dataset.artist };
-            musicPlayer.hidden = false;
-            updatePlayerControls();
-        });
-    });
 }
 
 musicHomeTab.addEventListener('click', () => switchMusicView('home'));
@@ -490,4 +494,4 @@ if ('mediaSession' in navigator) {
     });
 }
 
-bindCuratedTracks();
+loadTrendingMusic();

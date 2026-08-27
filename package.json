@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "build": "vite build",
+    "vercel-build": "vite build && node scripts/create-vercel-config.js",
     "server:dev": "nodemon server.js",
     "start": "node server.js"
   },
