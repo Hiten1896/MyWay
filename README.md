@@ -20,8 +20,8 @@ A single-page movie discovery app built on the [TMDB API](https://www.themoviedb
 
 | Layer | Choice |
 |---|---|
-| Markup / Logic | HTML5 / JavaScript, bundled and served via [Vite](https://vitejs.dev/) |
-| Styling | [Tailwind CSS (CDN)](https://tailwindcss.com/) layered under a custom CSS design system (`:root` variables in `index.html`) |
+| Markup / Logic | HTML5 / JavaScript, served via [Vite](https://vitejs.dev/) |
+| Styling | [Tailwind CSS (CDN)](https://tailwindcss.com/) layered under a custom CSS design system in `index.html` |
 | Data | [TMDB API](https://www.themoviedb.org/documentation/api) — posters, cast, trailers, metadata |
 | Storage | Browser `localStorage` for the watchlist — no database, no accounts |
 
@@ -66,11 +66,10 @@ npm run build
 ```
 myway/
 ├── index.html          # Markup entry point
-├── app.js / app.css     # Core application logic and styles
-├── env.js                # Environment/config loading helper
+├── env.js                # Optional environment/config loading helper
 ├── config.js            # Your real API key (created locally)
 ├── config.example.js    # Template for config.js — safe to commit
-├── css/ , js/            # Supporting assets
+├── css/ , js/            # Supporting Firebase/assets
 ├── manifest.json         # PWA manifest
 ├── sw.js                 # Service worker
 ├── package.json           # Project metadata and Vite scripts

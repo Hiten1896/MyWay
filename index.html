@@ -68,6 +68,7 @@
     /* Enable smooth scrolling for jump links */
     html {
         scroll-behavior: smooth;
+        scrollbar-gutter: stable;
     }
 
     body {
@@ -970,6 +971,41 @@
             aspect-ratio: 2 / 3;
         }
     }
+
+    .section-page-nav {
+        margin-top: 30px;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .section-primary-nav {
+        width: min(calc(100% - 32px), 560px);
+        padding: 6px;
+        gap: 6px;
+        background-color: var(--color-bg-primary);
+        border: 1px solid var(--color-border);
+        border-bottom: 3px solid var(--color-action);
+        border-radius: 14px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    }
+
+    .section-primary-nav .nav-tab {
+        flex: 1;
+        padding: 16px 34px;
+        font-size: 1.25rem;
+        font-weight: 700;
+        border-radius: 9px;
+    }
+
+    .section-primary-nav .nav-tab.active {
+        color: #FFFFFF;
+        background-color: var(--color-action);
+        border-bottom-color: var(--color-action);
+        box-shadow: 0 4px 10px rgba(138, 43, 226, 0.28);
+    }
+
+    body.music-section-active .section-page-nav {
+        display: none !important;
+    }
     </style>
 </head>
 <body>
@@ -999,10 +1035,14 @@
     </header>
 
     <nav id="category-nav">
-        <div class="max-w-4xl mx-auto flex justify-center">
-            <button id="home-tab" class="nav-tab active" data-view="home">Home</button>
-            <button id="categories-tab" class="nav-tab" data-view="categories">Categories</button>
-            <button id="watchlist-tab" class="nav-tab" data-view="watchlist">Watchlist</button>
+        <div class="section-primary-nav max-w-4xl mx-auto flex justify-center" role="tablist" aria-label="Media sections">
+            <button id="movies-section-tab" class="nav-tab active" type="button" role="tab" aria-selected="true">Movies</button>
+            <button id="music-section-tab" class="nav-tab" type="button" role="tab" aria-selected="false">Music</button>
+        </div>
+        <div class="section-page-nav max-w-4xl mx-auto flex justify-center">
+            <button id="home-tab" class="nav-tab page-nav-tab active" data-view="home">Home</button>
+            <button id="categories-tab" class="nav-tab page-nav-tab" data-view="categories">Categories</button>
+            <button id="watchlist-tab" class="nav-tab page-nav-tab" data-view="watchlist">Watchlist</button>
         </div>
     </nav>
 
@@ -1086,11 +1126,16 @@
     const themeToggleBtn = document.getElementById('theme-toggle');
     const themeToggleIcon = document.getElementById('theme-toggle-icon');
     const themeToggleLabel = document.getElementById('theme-toggle-label');
+    const moviesSectionTab = document.getElementById('movies-section-tab');
+    const musicSectionTab = document.getElementById('music-section-tab');
+    const pageNav = document.querySelector('.section-page-nav');
+    const movieResults = document.getElementById('movie-results');
 
     // --- STATE ---
     let currentFocus = -1; 
     let genreMap = {}; 
     let currentView = 'home';
+    let currentSection = 'movies';
     let homeLoaded = false;
     let categoriesLoaded = false;
     let toastTimer = null;
@@ -1769,9 +1814,10 @@
     // --- VIEW MANAGEMENT ---
 
     function renderView(viewName) {
+        currentSection = 'movies';
         currentView = viewName;
 
-        document.querySelectorAll('.nav-tab').forEach(tab => {
+        document.querySelectorAll('.page-nav-tab').forEach(tab => {
             tab.classList.remove('active');
         });
         const activeTabBtn = document.querySelector(`[data-view="${viewName}"]`);
@@ -1807,6 +1853,30 @@
     categoriesTab.addEventListener('click', () => renderView('categories'));
     watchlistTab.addEventListener('click', () => renderView('watchlist'));
 
+    function switchSection(sectionName) {
+        currentSection = sectionName;
+        const isMusic = sectionName === 'music';
+
+        moviesSectionTab.classList.toggle('active', !isMusic);
+        musicSectionTab.classList.toggle('active', isMusic);
+        moviesSectionTab.setAttribute('aria-selected', String(!isMusic));
+        musicSectionTab.setAttribute('aria-selected', String(isMusic));
+        moviesSectionTab.toggleAttribute('aria-current', !isMusic);
+        musicSectionTab.toggleAttribute('aria-current', isMusic);
+        document.body.classList.toggle('music-section-active', isMusic);
+        pageNav.hidden = isMusic;
+        movieResults.hidden = isMusic;
+        searchInput.placeholder = isMusic ? 'Search for song...' : 'Search for a movie title...';
+        closeAllLists();
+        searchInput.value = '';
+    }
+
+    moviesSectionTab.addEventListener('click', () => {
+        switchSection('movies');
+        renderView(currentView);
+    });
+    musicSectionTab.addEventListener('click', () => switchSection('music'));
+
 
     // --- GENERAL SEARCH LOGIC WITH PAGINATION ---
 
@@ -1820,7 +1890,7 @@
         searchView.innerHTML = '';
         categoryIndexBar.classList.add('hidden'); 
 
-        document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.page-nav-tab').forEach(tab => tab.classList.remove('active'));
 
         if (!requireApiKey(searchView)) return;
 
@@ -2137,10 +2207,12 @@
     const debouncedFetchSuggestions = debounce((value) => fetchSuggestions(value), 300);
 
     searchInput.addEventListener('input', function() {
+        if (currentSection !== 'movies') return;
         debouncedFetchSuggestions(this.value);
     });
 
     searchInput.addEventListener('keydown', function(e) {
+        if (currentSection !== 'movies') return;
         let items = suggestionBox.querySelectorAll('.suggestion-item');
         if (e.key === 'ArrowDown') {
             currentFocus++;
@@ -2161,6 +2233,7 @@
     });
 
     searchButton.addEventListener('click', () => {
+        if (currentSection !== 'movies') return;
         const query = searchInput.value.trim();
         if (query) {
             searchMovies(query);
@@ -2232,6 +2305,7 @@
         if (API_KEY) {
             await fetchGenreMap();
         }
+        switchSection('movies');
         renderView('home');
     }
 
