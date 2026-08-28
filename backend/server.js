@@ -32,7 +32,7 @@ app.use(express.json({ limit: '16kb' }));
 
 // Health Check Endpoint (monitored by the frontend header bar)
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', streamResolver: 'yt-dlp-ejs-v3' });
 });
 
 function getQuery(value) {
@@ -140,13 +140,15 @@ async function resolveStreamUrl(videoUrl) {
     const attempts = [
         {
             format: 'bestaudio/best',
-            extractorArgs: 'youtube:player_client=android_vr,web',
-            jsRuntimes: 'node'
+            extractorArgs: 'youtube:player_client=web,android_vr',
+            jsRuntimes: 'node',
+            remoteComponents: 'ejs:github'
         },
         {
             format: 'bestaudio[ext=m4a]/bestaudio/best',
             extractorArgs: 'youtube:player_client=android,web',
-            jsRuntimes: 'node'
+            jsRuntimes: 'node',
+            remoteComponents: 'ejs:github'
         }
     ];
     let lastError;
