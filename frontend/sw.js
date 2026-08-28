@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myway-shell-v3';
+const CACHE_NAME = 'myway-shell-v4';
 const APP_SHELL = [
   './',
   './index.html',
