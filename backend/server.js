@@ -256,6 +256,8 @@ app.get('/api/stream', async (req, res) => {
             noPlaylist: true,
             format: 'bestaudio[ext=m4a]/bestaudio/best',
             getUrl: true,
+            extractorArgs: 'youtube:player_client=android,web',
+            jsRuntimes: 'node',
             socketTimeout: Math.floor(YTDLP_TIMEOUT_MS / 1000)
         });
 
