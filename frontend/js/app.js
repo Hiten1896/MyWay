@@ -657,27 +657,43 @@ function initPrimaryNavigation() {
     const movieResults = document.getElementById('movie-results');
     const musicResults = document.getElementById('music-results');
 
-    musicTab?.addEventListener('click', () => {
+    function activateMusic() {
         document.body.classList.add('music-section-active');
-        musicTab.classList.add('active');
-        musicTab.setAttribute('aria-selected', 'true');
+        musicTab?.classList.add('active');
+        musicTab?.setAttribute('aria-selected', 'true');
         moviesTab?.classList.remove('active');
         moviesTab?.setAttribute('aria-selected', 'false');
 
         if (movieResults) movieResults.hidden = true;
         if (musicResults) musicResults.hidden = false;
-    });
+    }
 
-    moviesTab?.addEventListener('click', () => {
+    function activateMovies() {
         document.body.classList.remove('music-section-active');
-        moviesTab.classList.add('active');
-        moviesTab.setAttribute('aria-selected', 'true');
+        moviesTab?.classList.add('active');
+        moviesTab?.setAttribute('aria-selected', 'true');
         musicTab?.classList.remove('active');
         musicTab?.setAttribute('aria-selected', 'false');
 
         if (movieResults) movieResults.hidden = false;
         if (musicResults) musicResults.hidden = true;
-    });
+    }
+
+    musicTab?.addEventListener('click', activateMusic);
+    moviesTab?.addEventListener('click', activateMovies);
+
+    // Sync the actual page state (body class + which <main> is visible)
+    // to whichever tab the markup marks as active on load. Without this,
+    // the Music tab can render as "active" while #movie-results is still
+    // the one showing, #music-results stays hidden, the 3-part movies
+    // navbar stays visible, and the music-only dark styling (e.g. the
+    // theme-toggle button surface) never gets applied until the user
+    // clicks Movies then Music again.
+    if (musicTab?.classList.contains('active')) {
+        activateMusic();
+    } else {
+        activateMovies();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

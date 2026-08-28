@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="css/app.css">
 
 </head>
-<body>
+<body class="music-section-active">
     
     <header>
         <div class="header-top-bar flex justify-between">
@@ -70,7 +70,7 @@
         <button id="music-liked-tab" class="nav-tab" type="button" role="tab" aria-selected="false">Liked</button>
     </nav>
 
-    <main id="movie-results" class="max-w-7xl mx-auto">
+    <main id="movie-results" class="max-w-7xl mx-auto" hidden>
         
         <div id="home-view" class="content-view">
             <!-- Home content loaded here -->
@@ -100,7 +100,7 @@
         
     </main>
 
-    <main id="music-results" hidden>
+    <main id="music-results">
         <div id="music-home-view">
         <section aria-labelledby="mood-title">
             <div class="music-section-heading">
