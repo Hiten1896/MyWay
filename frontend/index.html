@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MyWay â€” discover popular Hollywood and Bollywood movies side by side, search, and build your own watchlist. Powered by TMDB.">
+    <meta name="description" content="MyWay — discover popular Hollywood and Bollywood movies side by side, search, and build your own watchlist. Powered by TMDB.">
     <meta name="theme-color" content="#8A2BE2">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -30,23 +30,25 @@
                 <span id="backend-status-label">Offline</span>
             </button>
             <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Dark Mode">
-                <span id="theme-toggle-icon">ðŸŒ™</span>
+                <span id="theme-toggle-icon">🌙</span>
                 <span id="theme-toggle-label">Dark Mode</span>
             </button>
         </div>
         <h1>MyWay</h1>
-        <div class="search-container">
+        <div class="search-container" style="position: relative;">
             <div class="search-bar-wrapper">
-                <input type="text" id="search-input" placeholder="Search for a movie title...">
+                <input type="text" id="search-input" placeholder="Search for a movie or song..." autocomplete="off">
                 
                 <button id="mic-button" title="Search by Voice">
-                    <svg id="mic-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                    <svg id="mic-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
                 </button>
                 
                 <button id="search-button" aria-label="Perform Search">
                     <svg id="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </button>
             </div>
+            <!-- Live Suggestions Box for iTunes Autocomplete -->
+            <ul id="suggestions-box" class="suggestions-box" style="position: absolute; top: 100%; left: 0; right: 0; background: #1f2937; color: #fff; list-style: none; padding: 0; margin: 4px 0 0 0; display: none; z-index: 1000; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);"></ul>
             <div id="suggestion-box"></div>
         </div>
     </header>
@@ -147,7 +149,7 @@
 
         <!-- Left: now-playing (art + title/artist), Spotify-web column 1 -->
         <div class="music-player-nowplaying">
-            <div class="music-player-art" aria-hidden="true">â™«</div>
+            <div class="music-player-art" aria-hidden="true">♫</div>
             <div class="music-player-copy"><strong id="music-player-title">Choose a mix</strong><small id="music-player-artist">MyWay Music</small></div>
             <button id="music-player-like" class="music-mini-like" type="button" aria-label="Like this song" aria-pressed="false">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -160,7 +162,7 @@
                 <button id="music-player-previous" class="music-transport" type="button" aria-label="Previous song">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
                 </button>
-                <button id="music-player-toggle" class="music-mini-play" type="button" aria-label="Play current track">â–¶</button>
+                <button id="music-player-toggle" class="music-mini-play" type="button" aria-label="Play current track">▶</button>
                 <button id="music-player-next" class="music-transport" type="button" aria-label="Next song">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg>
                 </button>
@@ -181,10 +183,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M17 8a5 5 0 0 1 0 8"/></svg>
                 <input type="range" min="0" max="100" value="70" aria-label="Volume">
             </div>
-            <button id="music-player-open" class="music-player-open" type="button" aria-label="Open now playing">âŒƒ</button>
+            <button id="music-player-open" class="music-player-open" type="button" aria-label="Open now playing">⌥</button>
         </div>
 
-        <span aria-hidden="true">â™ª</span>
+        <span aria-hidden="true">♪</span>
     </div>
 
     <!-- Spotify-style bottom tab bar (mobile music view only) -->
@@ -207,12 +209,12 @@
     <div id="music-player-backdrop" class="music-player-backdrop" hidden>
         <section class="music-player-expanded" role="dialog" aria-modal="true" aria-labelledby="music-expanded-title">
             <div class="music-expanded-topbar">
-                <button id="music-expanded-close" class="music-expanded-close" type="button" aria-label="Close player">âŒ„</button>
+                <button id="music-expanded-close" class="music-expanded-close" type="button" aria-label="Close player">⌥</button>
                 <p class="music-expanded-eyebrow">Playing from MyWay Music</p>
-                <button class="music-expanded-more" type="button" aria-label="More options">â‹¯</button>
+                <button class="music-expanded-more" type="button" aria-label="More options">⋯</button>
             </div>
 
-            <div id="music-expanded-art" class="music-expanded-art" aria-hidden="true">â™«</div>
+            <div id="music-expanded-art" class="music-expanded-art" aria-hidden="true">♫</div>
 
             <div class="music-expanded-copy-row">
                 <div class="music-expanded-copy">
@@ -234,7 +236,7 @@
                 <button id="music-previous" type="button" aria-label="Previous song">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
                 </button>
-                <button id="music-expanded-toggle" class="music-expanded-play" type="button" aria-label="Play current song">â–¶</button>
+                <button id="music-expanded-toggle" class="music-expanded-play" type="button" aria-label="Play current song">▶</button>
                 <button id="music-next" type="button" aria-label="Next song">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg>
                 </button>
@@ -268,18 +270,13 @@
     <!-- Toast Notification with Accessibility live region -->
     <div id="toast" aria-live="polite" aria-atomic="true"></div>
 
-    <footer>
-        <p>Powered by TMDB API | Designed for Modern Cinematic Experience</p>
-    </footer>
 
-    <!-- config.js defines window.TMDB_API_KEY. It is git-ignored â€” copy config.example.js to create it. -->
+    <!-- Script imports -->
     <script src="config.js"></script>
-
-
-    
     <script src="js/config.js"></script>
     <script src="js/movies.js"></script>
     <script src="js/music.js"></script>
+    <script src="js/search.js"></script>
     <script type="module" src="/js/app.js"></script>
 </body>
 </html>
