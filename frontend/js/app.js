@@ -682,6 +682,14 @@ function initPrimaryNavigation() {
     musicTab?.addEventListener('click', activateMusic);
     moviesTab?.addEventListener('click', activateMovies);
 
+    function syncToActiveTab() {
+        if (musicTab?.classList.contains('active') || document.body.classList.contains('music-section-active')) {
+            activateMusic();
+        } else {
+            activateMovies();
+        }
+    }
+
     // Sync the actual page state (body class + which <main> is visible)
     // to whichever tab the markup marks as active on load. Without this,
     // the Music tab can render as "active" while #movie-results is still
@@ -689,14 +697,27 @@ function initPrimaryNavigation() {
     // navbar stays visible, and the music-only dark styling (e.g. the
     // theme-toggle button surface) never gets applied until the user
     // clicks Movies then Music again.
-    if (musicTab?.classList.contains('active')) {
-        activateMusic();
-    } else {
-        activateMovies();
-    }
+    syncToActiveTab();
+    initPrimaryNavigation.lastSync = syncToActiveTab;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initPrimaryNavigation();
+
+    // Defensive re-sync: js/movies.js is a separate, independently
+    // loaded classic script that renders its own default view and may
+    // register its own DOMContentLoaded/async logic. If it runs after
+    // (or asynchronously past) the point above and touches body classes
+    // or the #movie-results/#music-results hidden state, the page can
+    // visibly land on the wrong section on first load (movies navbar +
+    // no music content) even though the Music tab is marked active in
+    // the markup — until the user manually clicks a tab and forces a
+    // fresh, correct sync. Re-running the same sync one tick later,
+    // after the whole document (including all classic scripts and any
+    // of their own load-time async work that resolves quickly) has
+    // settled, closes that race without needing to touch movies.js.
+    window.addEventListener('load', () => {
+        initPrimaryNavigation.lastSync?.();
+    });
 });

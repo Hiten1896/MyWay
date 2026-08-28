@@ -9,18 +9,37 @@
     --color-rating-bg: #FFC300;
     --color-rating-text: #1A1A1A;
 
-    /* Spotify-inspired music palette */
+    /* Spotify-inspired music palette (light, the default — matches
+       the rest of the site defaulting to Light Mode) */
+    --music-bg: #FFFFFF;
+    --music-surface: #F0F2F5;
+    --music-surface-2: #E7E9EC;
+    --music-surface-hover: #E0E2E6;
+    --music-green: #1ED760;
+    --music-green-press: #1AA34A;
+    --music-text: #1A1A1A;
+    --music-text-muted: #6B7280;
+    --music-border: #D1D5DB;
+    --bottom-nav-h: 58px;
+    --mini-player-h: 64px;
+}
+
+/* Dark-mode music palette. The site-wide theme toggle (data-theme
+   attribute on <html>, set by initTheme() in js/app.js) now also
+   drives the Music section. Previously --music-* was hardcoded dark
+   with NO light counterpart and was never gated behind [data-theme],
+   so: (a) Music always looked dark no matter what the saved theme
+   preference was, and (b) toggling the theme button while in the
+   Music tab visibly did nothing, because none of the music-* rules
+   ever referenced [data-theme] at all. */
+:root[data-theme="dark"] {
     --music-bg: #0A0A0C;
     --music-surface: #121214;
     --music-surface-2: #181818;
     --music-surface-hover: #212124;
-    --music-green: #1ED760;
-    --music-green-press: #1AA34A;
     --music-text: #FFFFFF;
     --music-text-muted: #A7A7A7;
     --music-border: #282828;
-    --bottom-nav-h: 58px;
-    --mini-player-h: 64px;
 }
 
 /* Dark Mode Theme Overrides */
