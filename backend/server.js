@@ -136,6 +136,39 @@ async function searchGoogleMusic(query, maxResults = 6) {
     return videos.sort((first, second) => second.views - first.views);
 }
 
+async function resolveStreamUrl(videoUrl) {
+    const attempts = [
+        {
+            format: 'bestaudio/best',
+            extractorArgs: 'youtube:player_client=android_vr,web',
+            jsRuntimes: 'node'
+        },
+        {
+            format: 'bestaudio[ext=m4a]/bestaudio/best',
+            extractorArgs: 'youtube:player_client=android,web',
+            jsRuntimes: 'node'
+        }
+    ];
+    let lastError;
+    for (const options of attempts) {
+        try {
+            const output = await ytDlp(videoUrl, {
+                ...options,
+                noWarnings: true,
+                noPlaylist: true,
+                getUrl: true,
+                socketTimeout: Math.floor(YTDLP_TIMEOUT_MS / 1000)
+            });
+            const url = String(output || '').trim().split(/\r?\n/)[0];
+            if (url) return url;
+        } catch (error) {
+            lastError = error;
+            console.warn(`Stream extraction attempt failed: ${error.message}`);
+        }
+    }
+    throw lastError || new Error('No playable stream was found.');
+}
+
 async function cachedMusic(key, loader) {
     const cached = musicCache.get(key);
     if (cached && cached.expiresAt > Date.now()) return cached.value;
@@ -251,17 +284,7 @@ app.get('/api/stream', async (req, res) => {
 
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
     try {
-        const streamUrl = await ytDlp(videoUrl, {
-            noWarnings: true,
-            noPlaylist: true,
-            format: 'bestaudio[ext=m4a]/bestaudio/best',
-            getUrl: true,
-            extractorArgs: 'youtube:player_client=android,web',
-            jsRuntimes: 'node',
-            socketTimeout: Math.floor(YTDLP_TIMEOUT_MS / 1000)
-        });
-
-        const playableUrl = String(streamUrl || '').trim().split(/\r?\n/)[0];
+        const playableUrl = await resolveStreamUrl(videoUrl);
         if (!playableUrl) {
             return res.status(404).json({ error: 'No playable audio stream was found.' });
         }
