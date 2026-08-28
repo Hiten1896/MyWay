@@ -13,17 +13,6 @@ html, body {
     max-width: 100%;
 }
 
-/* Prevent iOS "bounce" rubber-banding from revealing white background
-   behind the dark music surface, WITHOUT blocking normal touch/momentum
-   vertical scrolling. `overscroll-behavior-y: none` on iOS Safari can
-   suppress inertial touch scrolling on the whole document in some
-   versions, forcing users to drag the scrollbar thumb instead of
-   swiping. `contain` keeps the bounce from the music surface without
-   that side effect. */
-html, body {
-    overscroll-behavior-y: contain;
-}
-
 /* Respect safe areas on notch/gesture-bar devices for the fixed
    bottom navigation and mini-player everywhere they appear. */
 @supports (padding: max(0px)) {

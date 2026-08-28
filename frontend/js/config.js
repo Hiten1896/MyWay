@@ -5,4 +5,4 @@ window.MYWAY_API_BASE = '';
 // Console) used only for live music search suggestions as you type.
 // Restrict this key to your site's domain(s) in the Google Cloud Console
 // (HTTP referrer restriction) since it is exposed to the browser.
-window.GOOGLE_API_KEY = '';
+window.GOOGLE_API_KEY = 'AQ.Ab8RN6JZEoNaoY1eoaDWdiW2sZpJD5yWEYEs1l5UAAEwliyHqg';
