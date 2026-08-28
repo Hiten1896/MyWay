@@ -34,6 +34,10 @@ const musicHomeView = document.getElementById('music-home-view');
 const musicLikedView = document.getElementById('music-liked-view');
 const musicLikedList = document.getElementById('music-liked-list');
 const musicQueue = document.getElementById('music-queue');
+const musicPlayerLike = document.getElementById('music-player-like');
+const musicExpandedLike = document.getElementById('music-expanded-like');
+const musicVolume = document.querySelector('.music-player-volume input');
+const musicQueueButtons = document.querySelectorAll('[aria-label="Queue"]');
 const backendStatus = document.getElementById('backend-status');
 const backendStatusLabel = document.getElementById('backend-status-label');
 
@@ -56,6 +60,7 @@ let audio;
 function createAudioPlayer() {
     const player = new Audio();
     player.preload = 'none';
+    player.volume = Number(musicVolume?.value || 70) / 100;
 
     player.addEventListener('play', () => {
         if (player !== audio) return;
@@ -170,6 +175,13 @@ function updatePlayerControls() {
     }
     [musicPrevious, musicNext, musicPlayerPrevious, musicPlayerNext].forEach(button => {
         if (button) button.disabled = queue.length < 2;
+    });
+    const liked = currentTrack ? isLiked(currentTrack) : false;
+    [musicPlayerLike, musicExpandedLike].forEach(button => {
+        if (!button) return;
+        button.classList.toggle('active', liked);
+        button.setAttribute('aria-pressed', String(liked));
+        button.setAttribute('aria-label', liked ? 'Unlike this song' : 'Like this song');
     });
 }
 
@@ -563,6 +575,12 @@ function closeExpandedPlayer() {
     if (musicPlayerBackdrop) musicPlayerBackdrop.hidden = true;
 }
 
+function toggleCurrentTrackLike() {
+    if (!currentTrack) return;
+    toggleLike(currentTrack);
+    updatePlayerControls();
+}
+
 searchButton?.addEventListener('click', () => {
     const query = searchInput?.value.trim();
     if (!inMusicSection() || !query) return;
@@ -601,6 +619,20 @@ musicPlayerPrevious?.addEventListener('click', () => {
 });
 musicPlayerNext?.addEventListener('click', () => {
     if (queue.length > 1) playTrackAt((currentIndex + 1) % queue.length);
+});
+musicPlayerLike?.addEventListener('click', event => {
+    event.stopPropagation();
+    toggleCurrentTrackLike();
+});
+musicExpandedLike?.addEventListener('click', toggleCurrentTrackLike);
+musicVolume?.addEventListener('input', event => {
+    audio.volume = Number(event.target.value) / 100;
+});
+musicQueueButtons.forEach(button => {
+    button.addEventListener('click', event => {
+        event.stopPropagation();
+        if (musicQueue && !musicQueue.hidden) musicQueue.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
 });
 musicPlayerSeek?.addEventListener('input', event => seekTo(event.target.value));
 musicExpandedSeek?.addEventListener('input', event => seekTo(event.target.value));
