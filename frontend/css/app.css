@@ -1,823 +1,107 @@
-:root {
-    --color-bg-primary: #F0F2F5;
-    --color-bg-secondary: #FFFFFF;
-    --color-accent: #00A896;
-    --color-action: #8A2BE2; /* Violet color used for main headings and accents */
-    --color-text-main: #1A1A1A;
-    --color-text-muted: #6B7280;
-    --color-border: #D1D5DB;
-    --color-rating-bg: #FFC300;
-    --color-rating-text: #1A1A1A;
+/* app.css
+   Supplementary styles loaded alongside the inline <style> block in
+   index.html. Kept intentionally small - the inline block is the
+   source of truth for the Spotify-mobile-inspired music redesign.
+   This file only adds cross-cutting mobile polish that's easier to
+   manage as a separate, cacheable file. */
+
+/* Hard safety net: nothing on the page should ever be able to cause
+   horizontal scrolling/swiping on phones, regardless of any element
+   that miscalculates its width. */
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
 }
 
-/* Enable smooth scrolling for jump links */
-html {
-    scroll-behavior: smooth;
+/* Prevent iOS "bounce" rubber-banding from revealing white background
+   behind the dark music surface. */
+html, body {
+    overscroll-behavior-y: none;
 }
 
-body {
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: var(--color-bg-primary);
-    color: var(--color-text-main);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    line-height: 1.6;
-}
-
-header {
-    background-color: var(--color-bg-secondary);
-    padding: 2rem 0;
-    text-align: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
-}
-
-header h1 {
-    margin: 0;
-    font-family: 'Poppins', sans-serif;
-    font-size: 3.5rem;
-    color: var(--color-action);
-    letter-spacing: 5px;
-    text-shadow: 0 0 2px rgba(138, 43, 226, 0.4);
-}
-
-/* Search Container Styling */
-.search-container {
-    display: flex;
-    justify-content: center;
-    padding: 20px;
-    margin: 30px auto;
-    max-width: 700px;
-    position: relative; 
-}
-
-.search-bar-wrapper {
-    display: flex;
-    width: 100%;
-    border-radius: 30px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 2px solid var(--color-border);
-    transition: border-color 0.3s ease;
-}
-
-.search-bar-wrapper:focus-within {
-    border-color: var(--color-action);
-}
-
-#search-input {
-    flex-grow: 1;
-    padding: 15px 25px;
-    border: none;
-    font-size: 1.1rem;
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text-main);
-    outline: none;
-}
-
-#search-button, #mic-button { 
-    width: 50px; 
-    height: auto;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    flex-shrink: 0;
-}
-
-#mic-button {
-    background-color: var(--color-bg-secondary);
-    box-shadow: none; 
-    border-right: none; 
-}
-
-#mic-button:hover {
-    background-color: #E0E0E0;
-}
-
-#mic-button.listening { 
-    background-color: #FF6347;
-    animation: pulse-mic 1.5s infinite;
-}
-
-@keyframes pulse-mic {
-    0% { box-shadow: 0 0 0 0 rgba(255, 99, 71, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(255, 99, 71, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 99, 71, 0); }
-}
-
-#search-button {
-    background-color: var(--color-action);
-    box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3); 
-}
-
-#search-button svg {
-    width: 24px;
-    height: 24px;
-    stroke: var(--color-bg-secondary);
-}
-
-#mic-button svg {
-    width: 24px;
-    height: 24px;
-    stroke: var(--color-action);
-}
-
-#mic-button.listening svg {
-    stroke: var(--color-bg-secondary);
-}
-
-#search-button:hover {
-    background-color: #6A1A9A;
-    box-shadow: 0 8px 25px rgba(138, 43, 226, 0.5);
-}
-
-#search-button:active {
-    background-color: #4B0082;
-}
-
-#suggestion-box {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    width: 100%;
-    background-color: var(--color-bg-secondary);
-    border-radius: 8px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-    border: 1px solid var(--color-border);
-    margin-top: 5px; 
-    z-index: 20;
-    max-height: 250px;
-    overflow-y: auto;
-}
-
-.suggestion-item {
-    padding: 12px 20px;
-    cursor: pointer;
-    border-bottom: 1px solid var(--color-border);
-    transition: background-color 0.2s ease;
-    font-size: 1rem;
-    color: var(--color-text-main);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.suggestion-item:last-child {
-    border-bottom: none;
-}
-
-.suggestion-item:hover, .suggestion-item.active {
-    background-color: #E0E0E0;
-}
-
-.highlight {
-    color: var(--color-action);
-    font-weight: 700;
-}
-
-.suggestion-item span {
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
-    margin-left: 10px;
-}
-
-/* Tab Navigation Styles - The 'Never' Bar */
-#category-nav {
-    background-color: var(--color-bg-secondary); 
-    border-bottom: 2px solid var(--color-border); 
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); 
-    position: sticky;
-    top: 0; 
-    z-index: 10;
-}
-
-.nav-tab {
-    padding: 12px 24px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--color-text-muted);
-    background-color: transparent; 
-    cursor: pointer;
-    border: none;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.nav-tab:hover {
-    color: var(--color-accent);
-    background-color: #F8F8F8;
-}
-
-.nav-tab.active {
-    color: var(--color-action);
-    border-bottom: 3px solid var(--color-action);
-    background-color: #FFFFFF;
-}
-
-/* --- CATEGORY INDEX BAR STYLES --- */
-.categories-layout {
-    display: flex;
-    gap: 30px;
-    align-items: flex-start;
-}
-
-.sticky-index-bar {
-    position: sticky;
-    top: 80px; 
-    width: 250px; 
-    flex-shrink: 0;
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
-    padding: 20px;
-    border-radius: 12px;
-    background-color: var(--color-bg-secondary);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--color-border);
-    z-index: 5;
-}
-
-.category-main-content {
-    flex-grow: 1;
-    min-width: 0; 
-}
-
-.index-header {
-    font-family: 'Poppins', sans-serif;
-    font-size: 2.5rem;
-    color: var(--color-action);
-    letter-spacing: 2px;
-    font-weight: 700;
-    margin-bottom: 10px;
-    text-align: center;
-    border-bottom: 2px solid var(--color-border);
-    padding-bottom: 15px;
-}
-
-.index-item {
-    display: block;
-    padding: 8px 12px;
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: var(--color-text-main);
-    text-decoration: none;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    font-size: 0.95rem;
-}
-
-.index-item:hover {
-    background-color: #F8F8F8;
-    color: var(--color-accent);
-    font-weight: 600;
-}
-
-.index-item.active-category {
-    background-color: var(--color-action);
-    color: var(--color-bg-secondary);
-    font-weight: 700;
-    box-shadow: 0 2px 5px rgba(138, 43, 226, 0.3);
-}
-
-/* Responsive adjustments for the Categories view */
-@media (min-width: 1024px) { 
-    .categories-layout {
-        flex-direction: row;
-    }
-    .sticky-index-bar.hidden {
-        display: block !important;
+/* Respect safe areas on notch/gesture-bar devices for the fixed
+   bottom navigation and mini-player everywhere they appear. */
+@supports (padding: max(0px)) {
+    .music-bottom-nav {
+        padding-bottom: max(env(safe-area-inset-bottom), 6px);
     }
 }
 
-@media (max-width: 1023px) {
-    .categories-layout {
-        flex-direction: column;
-        gap: 20px;
-    }
-    .sticky-index-bar {
-        position: static; 
-        width: 100%;
-        max-height: none;
-        overflow-y: visible;
-    }
-    .sticky-index-bar .index-header {
-         display: none; 
-    }
-    .section-title {
-         scroll-margin-top: 100px; 
-    }
-    .category-grid {
-        padding: 0;
+/* Slightly larger tap targets across the board on touch devices. */
+@media (hover: none) and (pointer: coarse) {
+    .music-mood,
+    .music-like-btn,
+    .music-play-btn,
+    .music-bottom-nav button,
+    .music-player button {
+        min-height: 40px;
     }
 }
 
-/* Main Content Container Styling */
-#movie-results {
-    padding: 40px;
-    max-width: 1400px;
-    margin: 20px auto;
-    width: 100%;
-}
-
-.content-view {
-    display: flex;
-    flex-direction: column;
-    gap: 50px; 
-}
-
-.content-view.hidden {
-    display: none;
-}
-
-/* Core Grid Logic */
-.category-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px; 
-    padding: 0 10px;
-}
-
-@media (min-width: 640px) { 
-    .category-grid {
-        grid-template-columns: repeat(3, 1fr); 
-        gap: 30px;
-    }
-}
-
-@media (min-width: 1024px) { 
-    .category-grid {
-        grid-template-columns: repeat(4, 1fr); 
-        gap: 40px;
-    }
-}
-
-.section-title {
-    font-size: 2rem;
-    color: var(--color-action);
-    margin: 0 0 20px 0;
-    font-weight: 700;
-    text-align: center;
-    border-bottom: 3px solid var(--color-border);
-    padding-bottom: 10px;
-    padding-top: 10px;
-    scroll-margin-top: 90px;
-}
-
-.message {
-    width: 100%;
-    text-align: center;
-    font-size: 1.3rem;
-    color: var(--color-text-muted);
-    padding: 30px;
-    border-radius: 12px;
-    background-color: var(--color-bg-secondary);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    margin: 0 auto;
-}
-
-.message.error {
-    color: #FF6347;
-}
-
-.message.animate-pulse {
-    color: var(--color-action);
-    animation: pulse-light 1.5s infinite;
-}
-@keyframes pulse-light {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-/* Movie Card Styling */
-.movie-card {
-    background-color: var(--color-bg-secondary);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-    position: relative;
-}
-
-.movie-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 
-        0 10px 20px rgba(0, 0, 0, 0.15),
-        0 0 5px var(--color-accent);
-}
-
-.poster-container {
-    position: relative;
-    width: 100%;
-}
-
-.movie-card img {
-    width: 100%;
-    height: 360px;
-    object-fit: cover;
-    border-bottom: 2px solid var(--color-border);
-}
-
-/* Like Button Styling */
-.like-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: rgba(255, 255, 255, 0.9);
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transition: transform 0.2s ease, background-color 0.2s ease;
-    z-index: 5;
-}
-
-.like-btn:hover {
-    transform: scale(1.1);
-    background-color: #fff;
-}
-
-.like-btn svg {
-    width: 24px;
-    height: 24px;
-    stroke: var(--color-action);
-    stroke-width: 2;
-    fill: none;
-    transition: fill 0.2s ease, stroke 0.2s ease;
-}
-
-.like-btn.liked svg {
-    fill: #FF3040;
-    stroke: #FF3040;
-}
-
-.movie-info {
-    padding: 15px;
-    text-align: left;
-    flex-grow: 1;
-}
-
-.movie-title {
-    font-size: 1.3rem;
-    margin: 0 0 5px 0;
-    color: var(--color-accent);
-    font-weight: 600;
-}
-
-.movie-release {
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
-    margin-bottom: 10px;
-}
-
-.card-details {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 10px;
-    border-top: 1px solid var(--color-border);
-    margin-top: auto;
-}
-
-.movie-genre {
-    font-size: 0.95rem;
-    color: var(--color-text-main);
-    margin: 0;
-    flex-basis: 70%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.label {
-    font-weight: 600;
-    color: var(--color-action);
-}
-
-.rating-box {
-    background-color: var(--color-rating-bg);
-    color: var(--color-rating-text);
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    flex-shrink: 0;
-}
-
-.rating-box svg {
-    width: 16px;
-    height: 16px;
-    fill: var(--color-rating-text);
-}
-
-/* --- TOAST NOTIFICATION --- */
-#toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background-color: var(--color-text-main);
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 30px;
-    font-size: 0.95rem;
-    font-weight: 500;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
-    z-index: 100;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-#toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-}
-
-/* --- MOVIE DETAIL MODAL --- */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(3px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 50;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-}
-
-.modal-overlay.open {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.modal-card {
-    background-color: var(--color-bg-secondary);
-    border-radius: 16px;
-    max-width: 900px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    transform: translateY(20px) scale(0.98);
-    transition: transform 0.25s ease;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-}
-
-.modal-overlay.open .modal-card {
-    transform: translateY(0) scale(1);
-}
-
-.modal-close-btn {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: none;
-    background-color: rgba(0, 0, 0, 0.55);
-    color: #fff;
-    font-size: 1.3rem;
-    line-height: 1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2;
-    transition: background-color 0.2s ease;
-}
-
-.modal-close-btn:hover {
-    background-color: var(--color-action);
-}
-
-.modal-header {
-    display: flex;
-    gap: 25px;
-    padding: 30px;
-    flex-wrap: wrap;
-}
-
-.modal-poster {
-    width: 220px;
-    flex-shrink: 0;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-    background-color: var(--color-bg-primary);
-}
-
-.modal-info {
-    flex: 1;
-    min-width: 220px;
-}
-
-.modal-title {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.9rem;
-    color: var(--color-action);
-    margin: 0 0 6px 0;
-}
-
-.modal-tagline {
-    font-style: italic;
-    color: var(--color-text-muted);
-    margin: 0 0 15px 0;
-}
-
-.modal-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 15px;
-    align-items: center;
-}
-
-.modal-meta .rating-box {
-    font-size: 1rem;
-}
-
-.genre-pill {
-    background-color: var(--color-bg-primary);
-    border: 1px solid var(--color-border);
-    color: var(--color-text-main);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
-}
-
-.modal-overview {
-    margin: 15px 0;
-    color: var(--color-text-main);
-    line-height: 1.7;
-}
-
-.modal-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 15px;
-    flex-wrap: wrap;
-}
-
-.modal-watchlist-btn, .modal-trailer-btn {
-    padding: 10px 22px;
-    border-radius: 30px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    border: 2px solid var(--color-action);
-    transition: all 0.2s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.modal-watchlist-btn {
-    background-color: var(--color-action);
-    color: #fff;
-}
-
-.modal-watchlist-btn.liked {
-    background-color: #fff;
-    color: var(--color-action);
-}
-
-.modal-trailer-btn {
-    background-color: transparent;
-    color: var(--color-action);
-}
-
-.modal-trailer-btn:hover, .modal-watchlist-btn:hover {
-    opacity: 0.85;
-}
-
-.modal-cast-section {
-    padding: 0 30px 30px 30px;
-}
-
-.modal-cast-title {
-    font-weight: 700;
-    color: var(--color-action);
-    margin-bottom: 12px;
-    font-size: 1.1rem;
-}
-
+/* Smooth momentum scrolling for horizontal shelves on iOS Safari. */
+.music-album-grid,
+.music-moods,
 .cast-scroll {
-    display: flex;
-    gap: 16px;
-    overflow-x: auto;
-    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
 }
 
-.cast-member {
-    flex-shrink: 0;
-    width: 90px;
-    text-align: center;
-}
-
-.cast-member img {
-    width: 90px;
-    height: 90px;
-    object-fit: cover;
-    border-radius: 50%;
-    margin-bottom: 6px;
-    background-color: var(--color-bg-primary);
-    border: 2px solid var(--color-border);
-}
-
-.cast-member .cast-name {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--color-text-main);
-}
-
-.cast-member .cast-character {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-}
-
-@media (max-width: 640px) {
-    .modal-header { padding: 20px; }
-    .modal-poster { width: 140px; }
-    .modal-title { font-size: 1.4rem; }
-    .modal-cast-section { padding: 0 20px 20px 20px; }
-}
-
-footer {
-    margin-top: auto;
-    padding: 15px;
-    text-align: center;
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text-muted);
-    font-size: 0.85rem;
-    border-top: 1px solid var(--color-border);
-}
-
-@media (max-width: 768px) {
-    header h1 {
-        font-size: 2.5rem;
+/* Reduce motion for users who've asked for it. */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
     }
-
-    .section-title {
-        font-size: 1.5rem;
-    }
-    
-    .nav-tab {
-        padding: 10px 18px;
-        font-size: 1rem;
-    }
-
-    .search-container {
-        padding: 15px;
-        margin: 20px auto;
-    }
-    
-    #search-input {
-        padding: 15px 20px;
-        font-size: 1rem;
-    }
-
-    .category-grid {
-        gap: 20px;
-        padding: 0 10px;
-    }
-    
-    #movie-results {
-        padding: 20px;
-    }
-
-    .movie-card img {
-        height: 230px;
+    .music-mood,
+    .music-play-btn,
+    .music-song-card,
+    .music-album-card {
+        transition: none !important;
     }
 }
 
+/* iTunes Search Suggestion Styles */
+.music-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  transition: background 0.2s ease;
+}
 
+.music-suggestion-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
 
+.music-suggestion-item img {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
 
+.music-suggestion-item div {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
+.music-suggestion-item strong {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
+.music-suggestion-item small {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

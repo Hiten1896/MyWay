@@ -309,38 +309,76 @@ function switchMusicView(viewName) {
     if (showingLiked) renderLikedSongs();
 }
 
+/* ==========================================================================
+   UPDATED: iTunes Search API Integration for Live Suggestions
+   ========================================================================== */
 async function fetchMusicSuggestions(query) {
     const requestId = ++suggestionRequestId;
-    if (!query || !inMusicSection()) {
+    if (!query || query.trim().length < 2 || !inMusicSection()) {
         closeMusicSuggestions();
         return;
     }
 
+    const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=6`;
+
     try {
-        const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
-        if (!response.ok) throw new Error('Music suggestions failed');
+        const response = await fetch(itunesUrl);
+        if (!response.ok) throw new Error('iTunes suggestions failed');
+        
         const data = await response.json();
         if (requestId !== suggestionRequestId || !inMusicSection()) return;
 
-        const suggestions = (data.videos || []).slice(0, 6);
-        suggestionBox.innerHTML = suggestions.map(video => `
+        const suggestions = (data.results || []).map(track => ({
+            id: track.trackId,
+            title: track.trackName,
+            artist: track.artistName,
+            thumbnail: track.artworkUrl100?.replace('100x100bb', '300x300bb') || track.artworkUrl60,
+            previewUrl: track.previewUrl
+        }));
+
+        if (suggestions.length === 0) {
+            closeMusicSuggestions();
+            return;
+        }
+
+        suggestionBox.innerHTML = suggestions.map(track => `
             <button class="suggestion-item music-suggestion-item" type="button">
-                <strong>${escapeHtml(video.title)}</strong>
+                ${track.thumbnail ? `<img src="${escapeHtml(track.thumbnail)}" alt="" />` : ''}
+                <div>
+                    <strong>${escapeHtml(track.title)}</strong>
+                    <small>${escapeHtml(track.artist)}</small>
+                </div>
             </button>
         `).join('');
-        suggestionBox.style.display = suggestions.length ? 'block' : 'none';
+
+        suggestionBox.style.display = 'block';
 
         suggestionBox.querySelectorAll('.music-suggestion-item').forEach((item, index) => {
             item.addEventListener('click', () => {
-                queue = suggestions;
-                searchInput.value = suggestions[index].title;
+                const selectedTrack = suggestions[index];
+                searchInput.value = selectedTrack.title;
                 closeMusicSuggestions();
-                playTrackAt(index);
+
+                if (selectedTrack.previewUrl) {
+                    queue = suggestions;
+                    currentIndex = index;
+                    currentTrack = selectedTrack;
+                    
+                    replaceAudioPlayer();
+                    audio.src = selectedTrack.previewUrl;
+                    audio.play().then(() => {
+                        isPlaying = true;
+                        musicPlayer.hidden = false;
+                        updatePlayerControls();
+                    }).catch(err => console.error("Playback failed:", err));
+                } else {
+                    searchMusic(selectedTrack.title);
+                }
             });
         });
     } catch (error) {
         if (requestId === suggestionRequestId) closeMusicSuggestions();
-        console.error('Music suggestions failed:', error);
+        console.error('iTunes suggestions failed:', error);
     }
 }
 

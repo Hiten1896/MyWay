@@ -7,18 +7,20 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const YTDLP_TIMEOUT_MS = 30_000;
 const MUSIC_SEARCH_SUFFIX = ' official song music audio';
-const TRENDING_MUSIC_QUERY = 'trending songs today official music audio';
 const TRENDING_MUSIC_QUERIES = [
     'trending songs today official music audio',
     'new music releases today official song',
     'top songs this week official music video'
 ];
+
 const NON_MUSIC_PATTERN = /\b(podcast|interview|reaction|review|commentary|news|vlog|episode|talk show|livestream|live stream|gameplay|gaming|trailer|teaser|shorts?|tutorial|documentary|prank|challenge|unboxing|influencer)\b/i;
 const MUSIC_PATTERN = /\b(official (music )?(video|audio)|music video|lyrics?|audio|song|soundtrack|remix|karaoke|instrumental|cover|acoustic|slowed|sped up|nightcore|visualizer|mixtape|album)\b/i;
 
+// Enable CORS & JSON payload limits
 app.use(cors());
 app.use(express.json({ limit: '16kb' }));
 
+// Health Check Endpoint (monitored by the frontend header bar)
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
@@ -83,6 +85,7 @@ async function searchWithFallback(query) {
     }
 }
 
+// 1. Trending Songs Endpoint (/api/trending)
 app.get('/api/trending', async (req, res) => {
     const today = new Date().toISOString().slice(0, 10);
     try {
@@ -95,6 +98,7 @@ app.get('/api/trending', async (req, res) => {
             seenIds.add(video.id);
             return true;
         }).slice(0, 15);
+
         res.json({ date: today, videos });
     } catch (error) {
         console.error('Trending music lookup failed:', error.message);
@@ -102,6 +106,7 @@ app.get('/api/trending', async (req, res) => {
     }
 });
 
+// 2. Music Search Endpoint (/api/search?q=query)
 app.get('/api/search', async (req, res) => {
     const query = getQuery(req.query.q);
     if (!query) {
@@ -117,6 +122,7 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
+// 3. Audio Stream Resolution Endpoint (/api/stream?id=VIDEO_ID)
 app.get('/api/stream', async (req, res) => {
     const videoId = getQuery(req.query.id);
     if (!/^[\w-]{11}$/.test(videoId)) {
