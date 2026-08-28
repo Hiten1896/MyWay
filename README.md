@@ -42,14 +42,15 @@ cd myway
 **2. Get a free TMDB API key**
 Sign up at [themoviedb.org](https://www.themoviedb.org/signup), then generate a key under **Settings → API**. This project uses the "API Key (v3 auth)".
 
-**3. Add your key**
+**3. Configure environment variables**
 ```bash
-cp config.example.js config.js
+cp .env.example .env
 ```
-Open `config.js` and paste your key:
-```js
-window.TMDB_API_KEY = 'your-real-key-here';
+Add your TMDB key to `.env`:
+```env
+VITE_TMDB_API_KEY=your_tmdb_api_key
 ```
+For music suggestions and trending music, add `GOOGLE_API_KEY` only to the backend environment. Never put it in a frontend file.
 
 **4. Install dependencies**
 ```bash
@@ -66,9 +67,9 @@ npm run server:dev
 ```
 The backend runs at `http://localhost:3000`.
 
-The Music client uses `http://localhost:3000/api` automatically on localhost. For deployment, set `window.MYWAY_API_BASE` in `js/config.js` to your Render API URL, for example:
-```js
-window.MYWAY_API_BASE = 'https://your-render-service.onrender.com/api';
+The Music client uses `http://localhost:3000/api` automatically on localhost. For deployment, set `VITE_BACKEND_URL` in the Vercel or GitHub Actions environment:
+```env
+VITE_BACKEND_URL=https://your-render-service.onrender.com/api
 ```
 
 **6. Deploy the backend to Render**
@@ -101,7 +102,6 @@ myway/
 │   ├── js/               # Music client and Firebase assets
 │   ├── css/              # Supporting styles
 │   ├── icons/            # PWA icons
-│   ├── config.js         # Local runtime config (ignored)
 │   ├── manifest.json     # PWA manifest
 │   └── sw.js             # Service worker
 ├── backend/              # Render Node.js API service
@@ -128,7 +128,6 @@ myway/
 - [ ] Pagination for category/search results
 - [ ] Optional account sync for the watchlist and liked songs
 - [ ] Persistent Music playlists
-- [ ] Deploy-time API URL configuration instead of editing `js/config.js`
 
 ## 🙌 Credits
 

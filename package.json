@@ -4,9 +4,9 @@
   "description": "A single-page movie discovery app built on the [TMDB API](https://www.themoviedb.org/documentation/api). It was built as a 3rd-semester project, with one distinguishing idea: instead of showing only Hollywood movies (the default for most TMDB demo apps), every section of the app **deliberately interleaves popular English and Hindi cinema 50/50** — a home \"Spotlight,\" genre categories, and search results all give equal real estate to Bollywood and Hollywood.",
   "main": "server.js",
   "scripts": {
-    "dev": "vite --root frontend",
+    "dev": "vite frontend",
     "build": "vite build frontend --outDir dist",
-    "vercel-build": "vite build frontend && node scripts/create-vercel-config.js",
+    "vercel-build": "vite build frontend",
     "server:dev": "nodemon backend/server.js",
     "start": "node backend/server.js"
   },
@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "yt-dlp-exec": "^1.0.2",
     "yt-search": "^2.13.1"

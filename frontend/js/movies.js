@@ -1,9 +1,9 @@
 ﻿// --- CONFIGURATION ---
-const API_KEY = (typeof window.TMDB_API_KEY !== 'undefined') ? window.TMDB_API_KEY : '';
-const API_BASE_URL = 'https://api.themoviedb.org/3/';
-const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
-const BACKDROP_BASE_URL = 'https://image.tmdb.org/t/p/w780';
-const PROFILE_BASE_URL = 'https://image.tmdb.org/t/p/w185';
+const API_KEY = import.meta.env.VITE_TMDB_API_KEY || '';
+const API_BASE_URL = import.meta.env.VITE_TMDB_API_BASE_URL || 'https://api.themoviedb.org/3/';
+const IMAGE_BASE_URL = import.meta.env.VITE_TMDB_IMAGE_BASE_URL || 'https://image.tmdb.org/t/p/w500';
+const BACKDROP_BASE_URL = import.meta.env.VITE_TMDB_BACKDROP_BASE_URL || 'https://image.tmdb.org/t/p/w780';
+const PROFILE_BASE_URL = import.meta.env.VITE_TMDB_PROFILE_BASE_URL || 'https://image.tmdb.org/t/p/w185';
 
 // --- DOM Elements ---
 const searchInput = document.getElementById('search-input');
@@ -254,8 +254,7 @@ function requireApiKey(container) {
     container.innerHTML = `
         <div class="message error">
             <strong>Missing TMDB API key.</strong><br>
-            Copy <code>config.example.js</code> to <code>config.js</code> and add your
-            <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" style="color:var(--color-action); text-decoration:underline;">TMDB API key</a>, then reload the page.
+            Add <code>VITE_TMDB_API_KEY</code> to your <code>.env</code> file and reload the page.
         </div>`;
     return false;
 }

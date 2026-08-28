@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const ytSearch = require('yt-search');
@@ -5,6 +6,7 @@ const ytDlp = require('yt-dlp-exec');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || '';
 const YTDLP_TIMEOUT_MS = 30_000;
 const MUSIC_SEARCH_SUFFIX = ' official song music audio';
 const TRENDING_MUSIC_QUERIES = [
@@ -69,6 +71,39 @@ function onlyMusic(videos) {
     return videos.filter(isMusicVideo).slice(0, 12);
 }
 
+function normalizeGoogleVideo(item, query) {
+    const snippet = item.snippet || {};
+    return {
+        id: item.id?.videoId,
+        title: snippet.title || 'Untitled track',
+        artist: snippet.channelTitle || 'Unknown artist',
+        thumbnail: snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || '',
+        duration: null,
+        seconds: 0,
+        url: item.id?.videoId ? `https://www.youtube.com/watch?v=${item.id.videoId}` : '',
+        views: 0,
+        query
+    };
+}
+
+async function searchGoogleMusic(query, maxResults = 6) {
+    if (!GOOGLE_API_KEY) return [];
+    const params = new URLSearchParams({
+        part: 'snippet',
+        type: 'video',
+        videoCategoryId: '10',
+        maxResults: String(maxResults),
+        q: query,
+        key: GOOGLE_API_KEY
+    });
+    const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
+    if (!response.ok) throw new Error(`Google YouTube request failed with ${response.status}`);
+    const data = await response.json();
+    return (data.items || [])
+        .filter(item => item.id?.videoId)
+        .map(item => normalizeGoogleVideo(item, query));
+}
+
 async function searchWithFallback(query) {
     try {
         const result = await ytSearch(`${query}${MUSIC_SEARCH_SUFFIX}`);
@@ -89,6 +124,18 @@ async function searchWithFallback(query) {
 app.get('/api/trending', async (req, res) => {
     const today = new Date().toISOString().slice(0, 10);
     try {
+        if (GOOGLE_API_KEY) {
+            const resultSets = await Promise.all(
+                TRENDING_MUSIC_QUERIES.map(query => searchGoogleMusic(`${query} ${today}`, 6))
+            );
+            const seenIds = new Set();
+            const videos = resultSets.flat().filter(video => {
+                if (seenIds.has(video.id)) return false;
+                seenIds.add(video.id);
+                return true;
+            }).slice(0, 15);
+            return res.json({ date: today, videos });
+        }
         const resultSets = await Promise.all(
             TRENDING_MUSIC_QUERIES.map(query => searchWithFallback(`${query} ${today}`))
         );
@@ -106,7 +153,22 @@ app.get('/api/trending', async (req, res) => {
     }
 });
 
-// 2. Music Search Endpoint (/api/search?q=query)
+// 2. Google-backed live music suggestions (/api/suggestions?q=query)
+app.get('/api/suggestions', async (req, res) => {
+    const query = getQuery(req.query.q);
+    if (!query) return res.json({ suggestions: [] });
+    if (!GOOGLE_API_KEY) return res.status(503).json({ error: 'Google music search is not configured.' });
+
+    try {
+        const suggestions = await searchGoogleMusic(`${query} song`, 6);
+        res.json({ query, suggestions });
+    } catch (error) {
+        console.error('Google suggestions lookup failed:', error.message);
+        res.status(502).json({ error: 'Unable to load music suggestions right now.' });
+    }
+});
+
+// 3. Music Search Endpoint (/api/search?q=query)
 app.get('/api/search', async (req, res) => {
     const query = getQuery(req.query.q);
     if (!query) {
@@ -139,7 +201,7 @@ app.get('/api/stream', async (req, res) => {
             socketTimeout: Math.floor(YTDLP_TIMEOUT_MS / 1000)
         });
 
-        const playableUrl = String(streamUrl || '').trim();
+        const playableUrl = String(streamUrl || '').trim().split(/\r?\n/)[0];
         if (!playableUrl) {
             return res.status(404).json({ error: 'No playable audio stream was found.' });
         }

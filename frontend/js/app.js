@@ -1,5 +1,4 @@
 const API_BASE = import.meta.env.VITE_BACKEND_URL
-    || window.MYWAY_API_BASE
     || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:3000/api'
         : 'https://<YOUR-RENDER-APP-NAME>.onrender.com/api');
@@ -34,6 +33,7 @@ const musicLikedTab = document.getElementById('music-liked-tab');
 const musicHomeView = document.getElementById('music-home-view');
 const musicLikedView = document.getElementById('music-liked-view');
 const musicLikedList = document.getElementById('music-liked-list');
+const musicQueue = document.getElementById('music-queue');
 const backendStatus = document.getElementById('backend-status');
 const backendStatusLabel = document.getElementById('backend-status-label');
 
@@ -49,6 +49,8 @@ let suggestionTimer = null;
 let backendStatusTimer = null;
 let streamRequestController = null;
 let streamRequestId = 0;
+let upNextRequestId = 0;
+let loadedUpNextKey = '';
 let audio;
 
 function createAudioPlayer() {
@@ -149,6 +151,11 @@ function updatePlayerControls() {
             musicExpandedArt.setAttribute('aria-label', `${currentTrack.title} artwork`);
         }
         updateMediaSession();
+        const upNextKey = `${currentTrack.artist}:${currentTrack.id}`;
+        if (upNextKey !== loadedUpNextKey) {
+            loadedUpNextKey = upNextKey;
+            loadUpNext(currentTrack.artist, currentTrack.id);
+        }
     }
     [musicPrevious, musicNext, musicPlayerPrevious, musicPlayerNext].forEach(button => {
         if (button) button.disabled = queue.length < 2;
@@ -187,7 +194,11 @@ function renderSearchResults(videos) {
     `).join('');
 
     grid.querySelectorAll('[data-play-index]').forEach(button => {
-        button.addEventListener('click', () => playTrackAt(Number(button.dataset.playIndex)));
+        button.addEventListener('click', () => {
+            const track = videos[Number(button.dataset.playIndex)];
+            const action = playTrackAt(Number(button.dataset.playIndex));
+            action.catch(error => console.error('Track playback failed:', error));
+        });
     });
     grid.querySelectorAll('[data-like-index]').forEach(button => {
         button.addEventListener('click', () => toggleLike(videos[Number(button.dataset.likeIndex)]));
@@ -216,6 +227,35 @@ async function searchMusic(query) {
     renderSearchResults(queue);
 }
 
+async function playQuery(query) {
+    await searchMusic(query);
+    if (queue.length) await playTrackAt(0);
+}
+
+async function loadUpNext(artist, currentId) {
+    if (!musicQueue || !artist) return;
+    const requestId = ++upNextRequestId;
+    musicQueue.innerHTML = '<h3 id="queue-title">Up next</h3><p class="music-empty-state">Loading more from this artist...</p>';
+    try {
+        const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(`${artist} official songs`)}`);
+        if (!response.ok) throw new Error('Artist queue request failed');
+        const data = await response.json();
+        if (requestId !== upNextRequestId) return;
+        const tracks = (data.videos || []).filter(track => track.id !== currentId).slice(0, 4);
+        musicQueue.innerHTML = `<h3 id="queue-title">Up next · ${escapeHtml(artist)}</h3>` + (tracks.length
+            ? tracks.map((track, index) => `<button class="music-track" type="button" data-queue-id="${escapeHtml(track.id)}"><span class="music-track-cover">${String(index + 1).padStart(2, '0')}</span><span><strong>${escapeHtml(track.title)}</strong><small>${escapeHtml(track.artist)}${track.duration ? ` · ${escapeHtml(track.duration)}` : ''}</small></span></button>`).join('')
+            : '<p class="music-empty-state">No more songs found for this artist.</p>');
+        const queueTracks = new Map(tracks.map(track => [track.id, track]));
+        musicQueue.querySelectorAll('[data-queue-id]').forEach(button => {
+            button.addEventListener('click', () => playTrack(queueTracks.get(button.dataset.queueId)).catch(error => console.error('Up next playback failed:', error)));
+        });
+    } catch (error) {
+        if (requestId !== upNextRequestId) return;
+        musicQueue.innerHTML = '<h3 id="queue-title">Up next</h3><p class="music-empty-state">Artist queue is unavailable.</p>';
+        console.error('Up next failed:', error);
+    }
+}
+
 async function loadTrendingMusic() {
     try {
         const response = await fetch(`${API_BASE}/trending`);
@@ -228,6 +268,24 @@ async function loadTrendingMusic() {
         console.error('Trending music failed:', error);
     }
 }
+
+const musicMoodQueries = {
+    'All vibes': '',
+    Focus: 'focus music official song',
+    'Feel good': 'feel good music official song',
+    'Late night': 'late night music official song',
+    'Desi beats': 'new desi beats official song'
+};
+
+document.querySelectorAll('.music-mood').forEach(moodButton => {
+    moodButton.addEventListener('click', () => {
+        document.querySelectorAll('.music-mood').forEach(button => button.classList.remove('active'));
+        moodButton.classList.add('active');
+        const query = musicMoodQueries[moodButton.textContent.trim()] || '';
+        const request = query ? searchMusic(query) : loadTrendingMusic();
+        request.catch(error => console.error('Music filter failed:', error));
+    });
+});
 
 async function checkBackendStatus() {
     try {
@@ -326,12 +384,6 @@ function switchMusicView(viewName) {
    suggestions never play audio directly themselves.
    ========================================================================== */
 
-// Set your Google API key (with the YouTube Data API v3 enabled) here,
-// or provide it via VITE_GOOGLE_API_KEY in your .env file (preferred,
-// picked up automatically by Vite), or via window.GOOGLE_API_KEY from
-// config.js as a fallback for non-Vite/static deployments.
-const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || window.GOOGLE_API_KEY || '';
-
 function formatSuggestionLabel(title, artist) {
     const cleanTitle = String(title || '').trim();
     const cleanArtist = String(artist || '').trim();
@@ -345,50 +397,14 @@ async function fetchMusicSuggestions(query) {
         return;
     }
 
-    if (!GOOGLE_API_KEY) {
-        console.warn('Google API key not configured; live suggestions are disabled.');
-        closeMusicSuggestions();
-        return;
-    }
-
-    const params = new URLSearchParams({
-        part: 'snippet',
-        type: 'video',
-        videoCategoryId: '10', // Music category
-        maxResults: '6',
-        q: `${query} song`,
-        key: GOOGLE_API_KEY
-    });
-    const youtubeUrl = `https://www.googleapis.com/youtube/v3/search?${params.toString()}`;
-
     try {
-        const response = await fetch(youtubeUrl);
+        const response = await fetch(`${API_BASE}/suggestions?q=${encodeURIComponent(query)}`);
         if (!response.ok) throw new Error('YouTube suggestions failed');
 
         const data = await response.json();
         if (requestId !== suggestionRequestId || !inMusicSection()) return;
 
-        const suggestions = (data.items || [])
-            .filter(item => item.id && item.id.videoId)
-            .map(item => {
-                const rawTitle = item.snippet?.title || '';
-                const channel = item.snippet?.channelTitle || '';
-                // Best-effort split of "Song - Artist" or "Artist - Song"
-                // style YouTube titles; otherwise fall back to the channel
-                // name as the artist.
-                const dashSplit = rawTitle.split(/\s[-–—]\s/);
-                let title = rawTitle;
-                let artist = channel;
-                if (dashSplit.length >= 2) {
-                    [title, artist] = dashSplit;
-                }
-                return {
-                    id: item.id.videoId,
-                    title: title.trim(),
-                    artist: artist.trim(),
-                    thumbnail: item.snippet?.thumbnails?.default?.url || ''
-                };
-            });
+        const suggestions = data.suggestions || [];
 
         if (suggestions.length === 0) {
             closeMusicSuggestions();

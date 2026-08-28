@@ -30,17 +30,16 @@ jobs:
 
       - name: Build Frontend
         env:
-          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-          RENDER_API_URL: ${{ vars.RENDER_API_URL }}
+          VITE_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          VITE_BACKEND_URL: ${{ vars.RENDER_API_URL }}
         run: |
           npm ci
           npm run build
-          printf "window.TMDB_API_KEY = '%s';\nwindow.MYWAY_API_BASE = '%s';\n" "$TMDB_API_KEY" "$RENDER_API_URL" > dist/config.js
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ./frontend/dist
 
       - name: Deploy to GitHub Pages
         id: deployment
