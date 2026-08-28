@@ -228,6 +228,19 @@ function renderSearchResults(videos) {
     });
 }
 
+function showMusicLoading() {
+    const grid = document.getElementById('music-discovery-list');
+    if (!grid) return;
+    grid.className = 'music-song-list music-discovery-list music-loading-grid';
+    grid.innerHTML = Array.from({ length: 8 }, () => `
+        <div class="music-loading-card" aria-hidden="true">
+            <span class="music-loading-cover"></span>
+            <span class="music-loading-line"></span>
+            <span class="music-loading-line short"></span>
+        </div>
+    `).join('');
+}
+
 function escapeHtml(value) {
     return String(value)
         .replaceAll('&', '&amp;')
@@ -237,17 +250,25 @@ function escapeHtml(value) {
         .replaceAll("'", '&#039;');
 }
 
-async function searchMusic(query) {
-    const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
-    if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || 'Music search failed');
+async function searchMusic(query, language = '') {
+    showMusicLoading();
+    try {
+        const languageParam = language ? `&language=${encodeURIComponent(language)}` : '';
+        const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}${languageParam}`);
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || 'Music search failed');
+        }
+        const data = await response.json();
+        queue = data.videos || [];
+        currentIndex = -1;
+        switchMusicView('home');
+        renderSearchResults(queue);
+    } catch (error) {
+        const grid = document.getElementById('music-discovery-list');
+        if (grid) grid.innerHTML = `<p class="music-empty-state">${escapeHtml(error.message || 'Music search failed')}</p>`;
+        throw error;
     }
-    const data = await response.json();
-    queue = data.videos || [];
-    currentIndex = -1;
-    switchMusicView('home');
-    renderSearchResults(queue);
 }
 
 async function playQuery(query) {
@@ -282,6 +303,7 @@ async function loadUpNext(artist, currentId) {
 
 async function loadTrendingMusic() {
     try {
+    showMusicLoading();
         const response = await fetch(`${API_BASE}/trending`);
         if (!response.ok) throw new Error('Trending music request failed');
         const data = await response.json();
@@ -289,24 +311,21 @@ async function loadTrendingMusic() {
         currentIndex = -1;
         renderSearchResults(queue);
     } catch (error) {
+        const grid = document.getElementById('music-discovery-list');
+        if (grid) grid.innerHTML = '<p class="music-empty-state">Trending music is temporarily unavailable.</p>';
         console.error('Trending music failed:', error);
     }
 }
 
-const musicMoodQueries = {
-    'All vibes': '',
-    Focus: 'focus music official song',
-    'Feel good': 'feel good music official song',
-    'Late night': 'late night music official song',
-    'Desi beats': 'new desi beats official song'
-};
+const musicMoodQueries = { english: 'english', hindi: 'hindi', punjabi: 'punjabi', other: 'other' };
 
 document.querySelectorAll('.music-mood').forEach(moodButton => {
     moodButton.addEventListener('click', () => {
         document.querySelectorAll('.music-mood').forEach(button => button.classList.remove('active'));
         moodButton.classList.add('active');
-        const query = musicMoodQueries[moodButton.textContent.trim()] || '';
-        const request = query ? searchMusic(query) : loadTrendingMusic();
+        const language = moodButton.dataset.language || 'all';
+        const query = musicMoodQueries[language] || '';
+        const request = searchMusic(query, language);
         request.catch(error => console.error('Music filter failed:', error));
     });
 });
@@ -457,7 +476,7 @@ async function fetchMusicSuggestions(query) {
                     // Hand the exact clicked "songname - singer name" query
                     // to our own server so it can find and stream the song,
                     // exactly like a normal search submission.
-                    searchMusic(clickedQuery).catch(error => console.error('Music search failed:', error));
+                    playQuery(clickedQuery).catch(error => console.error('Music playback failed:', error));
                 });
             });
         }

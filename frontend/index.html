@@ -108,11 +108,10 @@
                 <span>Curated for your moment</span>
             </div>
             <div class="music-moods">
-                <button class="music-mood active" type="button">All vibes</button>
-                <button class="music-mood" type="button">Focus</button>
-                <button class="music-mood" type="button">Feel good</button>
-                <button class="music-mood" type="button">Late night</button>
-                <button class="music-mood" type="button">Desi beats</button>
+                <button class="music-mood active" type="button" data-language="all">English</button>
+                <button class="music-mood" type="button" data-language="hindi">Hindi</button>
+                <button class="music-mood" type="button" data-language="punjabi">Punjabi</button>
+                <button class="music-mood" type="button" data-language="other">Other</button>
             </div>
         </section>
 
@@ -122,7 +121,7 @@
                     <h3 id="mixes-title">Made for you</h3>
                     <span>Handpicked mixes</span>
                 </div>
-                <div id="music-discovery-list" class="music-album-grid music-song-list"><p class="music-empty-state">Loading today's trending songs...</p></div>
+                <div id="music-discovery-list" class="music-album-grid music-song-list" aria-live="polite"><p class="music-empty-state">Loading today's trending songs...</p></div>
             </section>
 
             <aside id="music-queue" class="music-queue" aria-labelledby="queue-title" hidden>

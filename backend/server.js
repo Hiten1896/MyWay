@@ -14,6 +14,12 @@ const TRENDING_MUSIC_QUERIES = [
     'new music releases today official song',
     'top songs this week official music video'
 ];
+const LANGUAGE_MUSIC_QUERIES = {
+    english: 'most viewed English songs official music audio',
+    hindi: 'most viewed Hindi songs official music audio',
+    punjabi: 'most viewed Punjabi songs official music audio',
+    other: 'most viewed Tamil Telugu Bengali songs official music audio'
+};
 const musicCache = new Map();
 const MUSIC_CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -70,7 +76,7 @@ function isMusicVideo(video) {
 }
 
 function onlyMusic(videos) {
-    return videos.filter(isMusicVideo).slice(0, 12);
+    return videos.filter(isMusicVideo).sort((first, second) => second.views - first.views).slice(0, 20);
 }
 
 function normalizeGoogleVideo(item, query) {
@@ -114,17 +120,20 @@ async function searchGoogleMusic(query, maxResults = 6) {
     if (!videos.length) return videos;
 
     const detailParams = new URLSearchParams({
-        part: 'contentDetails',
+        part: 'contentDetails,statistics',
         id: videos.map(video => video.id).join(','),
         key: GOOGLE_API_KEY
     });
     const detailResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?${detailParams}`);
     if (detailResponse.ok) {
         const details = await detailResponse.json();
-        const durations = new Map((details.items || []).map(item => [item.id, formatDuration(item.contentDetails?.duration)]));
-        videos.forEach(video => Object.assign(video, durations.get(video.id) || {}));
+        const detailsById = new Map((details.items || []).map(item => [item.id, {
+            ...formatDuration(item.contentDetails?.duration),
+            views: Number(item.statistics?.viewCount || 0)
+        }]));
+        videos.forEach(video => Object.assign(video, detailsById.get(video.id) || {}));
     }
-    return videos;
+    return videos.sort((first, second) => second.views - first.views);
 }
 
 async function cachedMusic(key, loader) {
@@ -165,7 +174,7 @@ app.get('/api/trending', async (req, res) => {
                     if (seenIds.has(video.id)) return false;
                     seenIds.add(video.id);
                     return true;
-                }).slice(0, 15);
+                }).slice(0, 20);
                 return res.json({ date: today, videos });
             } catch (error) {
                 console.warn('Google trending failed; using YouTube search fallback:', error.message);
@@ -179,7 +188,7 @@ app.get('/api/trending', async (req, res) => {
             if (seenIds.has(video.id)) return false;
             seenIds.add(video.id);
             return true;
-        }).slice(0, 15);
+        }).slice(0, 20);
 
         res.json({ date: today, videos });
     } catch (error) {
@@ -211,7 +220,21 @@ app.get('/api/search', async (req, res) => {
     }
 
     try {
-        const videos = await searchWithFallback(query);
+        const language = getQuery(req.query.language).toLowerCase();
+        const searchQuery = LANGUAGE_MUSIC_QUERIES[language]
+            ? `${LANGUAGE_MUSIC_QUERIES[language]} ${query}`
+            : query;
+        let videos;
+        if (language && GOOGLE_API_KEY) {
+            try {
+                videos = await searchGoogleMusic(searchQuery, 20);
+            } catch (error) {
+                console.warn('Google language search failed; using YouTube search fallback:', error.message);
+                videos = await searchWithFallback(searchQuery);
+            }
+        } else {
+            videos = await searchWithFallback(searchQuery);
+        }
         res.json({ query, videos });
     } catch (error) {
         console.error('YouTube search failed:', error.message);
