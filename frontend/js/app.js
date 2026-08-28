@@ -4,9 +4,9 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL
         ? 'http://localhost:3000/api'
         : 'https://<YOUR-RENDER-APP-NAME>.onrender.com/api');
 const BACKEND_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
-const searchInput = document.getElementById('search-input');
+const searchInput = document.getElementById('search-input') || document.getElementById('music-search-input');
 const searchButton = document.getElementById('search-button');
-const suggestionBox = document.getElementById('suggestion-box');
+const suggestionBox = document.getElementById('suggestion-box') || document.getElementById('search-suggestions');
 const musicResults = document.getElementById('music-results');
 const musicSectionTab = document.getElementById('music-section-tab');
 const musicPlayer = document.getElementById('music-player');
@@ -80,10 +80,12 @@ function createAudioPlayer() {
     player.addEventListener('loadedmetadata', () => {
         if (player !== audio) return;
         const duration = Math.floor(player.duration) || 0;
-        musicExpandedDuration.textContent = formatTime(duration);
+        if (musicExpandedDuration) musicExpandedDuration.textContent = formatTime(duration);
         [musicPlayerSeek, musicExpandedSeek].forEach(seek => {
-            seek.max = duration;
-            seek.value = 0;
+            if (seek) {
+                seek.max = duration;
+                seek.value = 0;
+            }
         });
     });
 
@@ -91,7 +93,7 @@ function createAudioPlayer() {
         if (player !== audio || !player.duration) return;
         const position = Math.floor(player.currentTime);
         [musicPlayerSeek, musicExpandedSeek].forEach(seek => {
-            if (document.activeElement !== seek) seek.value = position;
+            if (seek && document.activeElement !== seek) seek.value = position;
         });
     });
 
@@ -137,17 +139,19 @@ function updateMediaSession() {
 function updatePlayerControls() {
     updatePlayerButton();
     if (currentTrack) {
-        musicPlayerTitle.textContent = currentTrack.title;
-        musicPlayerArtist.textContent = currentTrack.artist;
-        musicExpandedTitle.textContent = currentTrack.title;
-        musicExpandedArtist.textContent = currentTrack.artist;
-        musicExpandedArt.style.backgroundImage = currentTrack.thumbnail ? `url("${currentTrack.thumbnail}")` : '';
-        musicExpandedArt.textContent = currentTrack.thumbnail ? '' : '♫';
-        musicExpandedArt.setAttribute('aria-label', `${currentTrack.title} artwork`);
+        if (musicPlayerTitle) musicPlayerTitle.textContent = currentTrack.title;
+        if (musicPlayerArtist) musicPlayerArtist.textContent = currentTrack.artist;
+        if (musicExpandedTitle) musicExpandedTitle.textContent = currentTrack.title;
+        if (musicExpandedArtist) musicExpandedArtist.textContent = currentTrack.artist;
+        if (musicExpandedArt) {
+            musicExpandedArt.style.backgroundImage = currentTrack.thumbnail ? `url("${currentTrack.thumbnail}")` : '';
+            musicExpandedArt.textContent = currentTrack.thumbnail ? '' : '♫';
+            musicExpandedArt.setAttribute('aria-label', `${currentTrack.title} artwork`);
+        }
         updateMediaSession();
     }
     [musicPrevious, musicNext, musicPlayerPrevious, musicPlayerNext].forEach(button => {
-        button.disabled = queue.length < 2;
+        if (button) button.disabled = queue.length < 2;
     });
 }
 
@@ -229,11 +233,11 @@ async function checkBackendStatus() {
     try {
         const response = await fetch(`${BACKEND_ORIGIN}/health`, { cache: 'no-store' });
         const online = response.ok;
-        backendStatus.classList.toggle('online', online);
-        backendStatusLabel.textContent = online ? 'Online' : 'Offline';
+        if (backendStatus) backendStatus.classList.toggle('online', online);
+        if (backendStatusLabel) backendStatusLabel.textContent = online ? 'Online' : 'Offline';
     } catch (error) {
-        backendStatus.classList.remove('online');
-        backendStatusLabel.textContent = 'Offline';
+        if (backendStatus) backendStatus.classList.remove('online');
+        if (backendStatusLabel) backendStatusLabel.textContent = 'Offline';
     }
 }
 
@@ -271,6 +275,7 @@ function toggleLike(video) {
 }
 
 function renderLikedSongs() {
+    if (!musicLikedList) return;
     const likedSongs = getLikedSongs();
     if (!likedSongs.length) {
         musicLikedList.innerHTML = '<p class="music-empty-state">Songs you like will appear here.</p>';
@@ -300,17 +305,21 @@ function renderLikedSongs() {
 function switchMusicView(viewName) {
     musicView = viewName;
     const showingLiked = viewName === 'liked';
-    musicHomeView.hidden = showingLiked;
-    musicLikedView.hidden = !showingLiked;
-    musicHomeTab.classList.toggle('active', !showingLiked);
-    musicLikedTab.classList.toggle('active', showingLiked);
-    musicHomeTab.setAttribute('aria-selected', String(!showingLiked));
-    musicLikedTab.setAttribute('aria-selected', String(showingLiked));
+    if (musicHomeView) musicHomeView.hidden = showingLiked;
+    if (musicLikedView) musicLikedView.hidden = !showingLiked;
+    if (musicHomeTab) {
+        musicHomeTab.classList.toggle('active', !showingLiked);
+        musicHomeTab.setAttribute('aria-selected', String(!showingLiked));
+    }
+    if (musicLikedTab) {
+        musicLikedTab.classList.toggle('active', showingLiked);
+        musicLikedTab.setAttribute('aria-selected', String(showingLiked));
+    }
     if (showingLiked) renderLikedSongs();
 }
 
 /* ==========================================================================
-   UPDATED: iTunes Search API Integration for Live Suggestions
+   iTunes Search API Integration for Live Suggestions
    ========================================================================== */
 async function fetchMusicSuggestions(query) {
     const requestId = ++suggestionRequestId;
@@ -341,50 +350,52 @@ async function fetchMusicSuggestions(query) {
             return;
         }
 
-        suggestionBox.innerHTML = suggestions.map(track => `
-            <button class="suggestion-item music-suggestion-item" type="button">
-                ${track.thumbnail ? `<img src="${escapeHtml(track.thumbnail)}" alt="" />` : ''}
-                <div>
-                    <strong>${escapeHtml(track.title)}</strong>
-                    <small>${escapeHtml(track.artist)}</small>
-                </div>
-            </button>
-        `).join('');
+        if (suggestionBox) {
+            suggestionBox.innerHTML = suggestions.map(track => `
+                <button class="suggestion-item music-suggestion-item" type="button">
+                    ${track.thumbnail ? `<img src="${escapeHtml(track.thumbnail)}" alt="" />` : ''}
+                    <div>
+                        <strong>${escapeHtml(track.title)}</strong>
+                        <small>${escapeHtml(track.artist)}</small>
+                    </div>
+                </button>
+            `).join('');
 
-        suggestionBox.style.display = 'block';
+            suggestionBox.style.display = 'block';
 
-        suggestionBox.querySelectorAll('.music-suggestion-item').forEach((item, index) => {
-            item.addEventListener('click', () => {
-                const selectedTrack = suggestions[index];
-                searchInput.value = selectedTrack.title;
-                closeMusicSuggestions();
+            suggestionBox.querySelectorAll('.music-suggestion-item').forEach((item, index) => {
+                item.addEventListener('click', () => {
+                    const selectedTrack = suggestions[index];
+                    if (searchInput) searchInput.value = selectedTrack.title;
+                    closeMusicSuggestions();
 
-                if (selectedTrack.previewUrl) {
-                    queue = suggestions;
-                    currentIndex = index;
-                    currentTrack = selectedTrack;
-                    
-                    replaceAudioPlayer();
-                    audio.src = selectedTrack.previewUrl;
-                    audio.play().then(() => {
-                        isPlaying = true;
-                        musicPlayer.hidden = false;
-                        updatePlayerControls();
-                    }).catch(err => console.error("Playback failed:", err));
-                } else {
-                    searchMusic(selectedTrack.title);
-                }
+                    if (selectedTrack.previewUrl) {
+                        queue = suggestions;
+                        currentIndex = index;
+                        currentTrack = selectedTrack;
+                        
+                        replaceAudioPlayer();
+                        audio.src = selectedTrack.previewUrl;
+                        audio.play().then(() => {
+                            isPlaying = true;
+                            if (musicPlayer) musicPlayer.hidden = false;
+                            updatePlayerControls();
+                        }).catch(err => console.error("Playback failed:", err));
+                    } else {
+                        searchMusic(selectedTrack.title);
+                    }
+                });
             });
-        });
+        }
     } catch (error) {
         if (requestId === suggestionRequestId) closeMusicSuggestions();
         console.error('iTunes suggestions failed:', error);
     }
 }
 
-musicHomeTab.addEventListener('click', () => switchMusicView('home'));
-musicLikedTab.addEventListener('click', () => switchMusicView('liked'));
-musicSectionTab.addEventListener('click', () => switchMusicView('home'));
+musicHomeTab?.addEventListener('click', () => switchMusicView('home'));
+musicLikedTab?.addEventListener('click', () => switchMusicView('liked'));
+musicSectionTab?.addEventListener('click', () => switchMusicView('home'));
 
 async function playTrack(track) {
     currentTrack = track;
@@ -419,7 +430,7 @@ async function loadTrack(track) {
     streamRequestController = track.id ? new AbortController() : null;
     replaceAudioPlayer();
     isPlaying = false;
-    musicPlayer.hidden = false;
+    if (musicPlayer) musicPlayer.hidden = false;
     updatePlayerControls();
 
     if (!track.id) {
@@ -467,13 +478,13 @@ async function togglePlayback() {
 }
 
 function openExpandedPlayer() {
-    if (!currentTrack) return;
+    if (!currentTrack || !musicPlayerBackdrop) return;
     musicPlayerBackdrop.hidden = false;
-    musicExpandedClose.focus();
+    musicExpandedClose?.focus();
 }
 
 function closeExpandedPlayer() {
-    musicPlayerBackdrop.hidden = true;
+    if (musicPlayerBackdrop) musicPlayerBackdrop.hidden = true;
 }
 
 searchButton?.addEventListener('click', () => {
@@ -490,10 +501,20 @@ searchInput?.addEventListener('keydown', event => {
     }
 });
 
-searchInput?.addEventListener('input', () => {
-    if (!inMusicSection()) return;
+searchInput?.addEventListener('input', (e) => {
     clearTimeout(suggestionTimer);
-    suggestionTimer = setTimeout(() => fetchMusicSuggestions(searchInput.value.trim()), 300);
+    const query = e.target.value.trim();
+
+    if (!query) {
+        closeMusicSuggestions();
+        return;
+    }
+
+    if (inMusicSection()) {
+        suggestionTimer = setTimeout(() => {
+            fetchMusicSuggestions(query);
+        }, 300);
+    }
 });
 
 musicPlayerToggle?.addEventListener('click', () => {
@@ -514,7 +535,7 @@ musicPlayer?.addEventListener('click', event => {
 musicPlayerOpen?.addEventListener('click', openExpandedPlayer);
 musicExpandedClose?.addEventListener('click', closeExpandedPlayer);
 document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && !musicPlayerBackdrop.hidden) closeExpandedPlayer();
+    if (event.key === 'Escape' && musicPlayerBackdrop && !musicPlayerBackdrop.hidden) closeExpandedPlayer();
 });
 musicPlayerBackdrop?.addEventListener('click', event => {
     if (event.target === musicPlayerBackdrop) closeExpandedPlayer();
@@ -562,7 +583,7 @@ loadTrendingMusic();
 startBackendStatusMonitor();
 
 /* ==========================================================================
-   Theme Switcher & Section Switcher Fixes
+   Theme Switcher & Section Switcher
    ========================================================================== */
 
 function initTheme() {
@@ -622,7 +643,6 @@ function initPrimaryNavigation() {
     });
 }
 
-// Ensure these fire inside your main DOMContentLoaded listener in app.js
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initPrimaryNavigation();
