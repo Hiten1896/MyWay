@@ -17,7 +17,6 @@ const musicPlayerNext = document.getElementById('music-player-next');
 const musicPlayerSeek = document.getElementById('music-player-seek');
 const musicPlayerElapsed = document.getElementById('music-player-elapsed');
 const musicPlayerDuration = document.getElementById('music-player-duration');
-const musicPlayerOpen = document.getElementById('music-player-open');
 const musicPlayerBackdrop = document.getElementById('music-player-backdrop');
 const musicExpandedClose = document.getElementById('music-expanded-close');
 const musicExpandedTitle = document.getElementById('music-expanded-title');
@@ -647,9 +646,7 @@ async function togglePlayback() {
 }
 
 function openExpandedPlayer() {
-    if (!currentTrack || !musicPlayerBackdrop) return;
-    musicPlayerBackdrop.hidden = false;
-    musicExpandedClose?.focus();
+    return;
 }
 
 function closeExpandedPlayer() {
@@ -719,10 +716,6 @@ musicQueueButtons.forEach(button => {
 musicPlayerSeek?.addEventListener('input', event => seekTo(event.target.value));
 musicExpandedSeek?.addEventListener('input', event => seekTo(event.target.value));
 
-musicPlayer?.addEventListener('click', event => {
-    if (!event.target.closest('button, input')) openExpandedPlayer();
-});
-musicPlayerOpen?.addEventListener('click', openExpandedPlayer);
 musicExpandedClose?.addEventListener('click', closeExpandedPlayer);
 document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && musicPlayerBackdrop && !musicPlayerBackdrop.hidden) closeExpandedPlayer();
