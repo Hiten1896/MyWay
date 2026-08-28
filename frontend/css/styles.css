@@ -2055,9 +2055,41 @@ body.music-section-active .music-page-nav {
 }
 
 @media (max-width: 799px) {
-    #music-results { padding: 20px 16px calc(116px + var(--mini-player-h)); }
+    :root {
+        --bottom-nav-h: 56px;
+        --mini-player-h: 68px;
+    }
+
+    #music-results { padding: 20px 16px calc(136px + env(safe-area-inset-bottom)); }
     .music-discovery-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-    .music-discovery-list .music-song-cover { height: 150px; }
+    .music-discovery-list .music-song-card { min-height: 250px; }
+    .music-discovery-list .music-song-cover { height: 140px; }
+    .music-discovery-list .music-song-copy { padding: 11px 48px 11px 11px; }
+    .music-discovery-list .music-song-copy strong { font-size: 0.8rem; }
+    .music-discovery-list .music-song-copy small { font-size: 0.72rem; }
+
+    .music-player {
+        bottom: var(--bottom-nav-h);
+        height: var(--mini-player-h);
+        gap: 6px;
+        padding: 0 10px;
+    }
+    .music-player-art { width: 42px; height: 42px; }
+    .music-player-copy strong { font-size: 0.78rem; }
+    .music-player-copy small { font-size: 0.68rem; }
+    .music-player .music-mini-like,
+    .music-player .music-mini-play { width: 36px; height: 36px; }
+
+    .music-bottom-nav {
+        height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
+        padding: 0 18px env(safe-area-inset-bottom);
+    }
+    .music-bottom-nav button {
+        min-height: var(--bottom-nav-h);
+        gap: 4px;
+        font-size: 0.7rem;
+    }
+    .music-bottom-nav button svg { width: 20px; height: 20px; }
 }
 
 @media (max-width: 380px) {
