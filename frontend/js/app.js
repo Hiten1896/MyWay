@@ -15,12 +15,15 @@ const musicPlayerToggle = document.getElementById('music-player-toggle');
 const musicPlayerPrevious = document.getElementById('music-player-previous');
 const musicPlayerNext = document.getElementById('music-player-next');
 const musicPlayerSeek = document.getElementById('music-player-seek');
+const musicPlayerElapsed = document.getElementById('music-player-elapsed');
+const musicPlayerDuration = document.getElementById('music-player-duration');
 const musicPlayerOpen = document.getElementById('music-player-open');
 const musicPlayerBackdrop = document.getElementById('music-player-backdrop');
 const musicExpandedClose = document.getElementById('music-expanded-close');
 const musicExpandedTitle = document.getElementById('music-expanded-title');
 const musicExpandedArtist = document.getElementById('music-expanded-artist');
 const musicExpandedArt = document.getElementById('music-expanded-art');
+const youtubePlayerHost = document.getElementById('youtube-player-host');
 const musicExpandedDuration = document.getElementById('music-expanded-duration');
 const musicExpandedSeek = document.getElementById('music-expanded-seek');
 const musicExpandedToggle = document.getElementById('music-expanded-toggle');
@@ -58,6 +61,46 @@ let upNextRequestId = 0;
 let loadedUpNextKey = '';
 let musicResultsMode = 'home';
 let audio;
+let youtubePlayer = null;
+let youtubeApiPromise = null;
+let youtubeProgressTimer = null;
+
+function ensureYoutubeApi() {
+    if (window.YT?.Player) return Promise.resolve(window.YT);
+    if (youtubeApiPromise) return youtubeApiPromise;
+    youtubeApiPromise = new Promise((resolve, reject) => {
+        const previousCallback = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = () => {
+            previousCallback?.();
+            resolve(window.YT);
+        };
+        const script = document.createElement('script');
+        script.src = 'https://www.youtube.com/iframe_api';
+        script.async = true;
+        script.onerror = () => reject(new Error('YouTube player API failed to load'));
+        document.head.appendChild(script);
+    });
+    return youtubeApiPromise;
+}
+
+function updateYoutubeProgress() {
+    if (!youtubePlayer?.getDuration) return;
+    const duration = youtubePlayer.getDuration() || 0;
+    const position = youtubePlayer.getCurrentTime() || 0;
+    if (musicExpandedDuration) musicExpandedDuration.textContent = formatTime(duration);
+    if (musicPlayerElapsed) musicPlayerElapsed.textContent = formatTime(position);
+    if (musicPlayerDuration) musicPlayerDuration.textContent = formatTime(duration);
+    [musicPlayerSeek, musicExpandedSeek].forEach(seek => {
+        if (!seek) return;
+        seek.max = Math.floor(duration);
+        if (document.activeElement !== seek) seek.value = Math.floor(position);
+    });
+}
+
+function startYoutubeProgress() {
+    clearInterval(youtubeProgressTimer);
+    youtubeProgressTimer = window.setInterval(updateYoutubeProgress, 500);
+}
 
 function createAudioPlayer() {
     const player = new Audio();
@@ -195,8 +238,12 @@ function formatTime(seconds) {
 }
 
 function seekTo(value) {
-    if (!audio.duration) return;
-    audio.currentTime = Number(value);
+    if (youtubePlayer?.seekTo) {
+        youtubePlayer.seekTo(Number(value), true);
+        updateYoutubeProgress();
+        return;
+    }
+    if (audio.duration) audio.currentTime = Number(value);
 }
 
 function renderSearchResults(videos) {
@@ -532,10 +579,8 @@ async function playTrackAt(index) {
 
 async function loadTrack(track) {
     currentTrack = track;
-    const requestId = ++streamRequestId;
-    streamRequestController?.abort();
-    streamRequestController = track.id ? new AbortController() : null;
-    replaceAudioPlayer();
+    ++streamRequestId;
+    clearInterval(youtubeProgressTimer);
     isPlaying = false;
     loadedUpNextKey = '';
     if (musicQueue) musicQueue.hidden = true;
@@ -543,54 +588,57 @@ async function loadTrack(track) {
     updatePlayerControls();
 
     if (!track.id) {
-        isPlaying = false;
-        updatePlayerControls();
         return;
     }
 
     try {
-        const response = await fetch(`${API_BASE}/stream?id=${encodeURIComponent(track.id)}`, {
-            signal: streamRequestController.signal
-        });
-        if (requestId !== streamRequestId) return;
-        if (!response.ok) throw new Error('Stream lookup failed');
-        const data = await response.json();
-        if (requestId !== streamRequestId) return;
-        audio.src = data.url;
-        audio.load();
-        try {
-            await audio.play();
-        } catch (playError) {
-            // Browsers can reject playback after the async stream lookup.
-            // Keep the source loaded so the visible Play button can retry it.
-            if (playError.name !== 'NotAllowedError') throw playError;
-            isPlaying = false;
+        const YTApi = await ensureYoutubeApi();
+        if (!youtubePlayer) {
+            youtubePlayer = new YTApi.Player(youtubePlayerHost, {
+                width: '100%',
+                height: '100%',
+                videoId: track.id,
+                playerVars: { playsinline: 1, controls: 1, rel: 0 },
+                events: {
+                    onReady: event => {
+                        event.target.setVolume(Number(musicVolume?.value || 70));
+                        event.target.playVideo();
+                        startYoutubeProgress();
+                        updateYoutubeProgress();
+                    },
+                    onStateChange: event => {
+                        const states = YTApi.PlayerState;
+                        isPlaying = event.data === states.PLAYING;
+                        if (event.data === states.PLAYING) {
+                            startYoutubeProgress();
+                            if (currentTrack) loadUpNext(currentTrack.artist, currentTrack.id);
+                        }
+                        if (event.data === states.ENDED) {
+                            if (repeatEnabled) event.target.seekTo(0, true);
+                            else if (queue.length > 1) playTrackAt((currentIndex + 1) % queue.length);
+                        }
+                        updatePlayerControls();
+                    }
+                }
+            });
+        } else {
+            youtubePlayer.loadVideoById(track.id);
         }
-        if (requestId !== streamRequestId) {
-            audio.pause();
-            return;
-        }
-        updatePlayerButton();
     } catch (error) {
-        if (error.name === 'AbortError' || requestId !== streamRequestId) return;
         console.error('Track playback failed:', error);
         isPlaying = false;
+        updatePlayerControls();
     }
-    updatePlayerControls();
 }
 
 async function togglePlayback() {
     if (!currentTrack) return;
     if (isPlaying) {
-        audio.pause();
+        if (youtubePlayer) youtubePlayer.pauseVideo();
+        else audio.pause();
         isPlaying = false;
-    } else if (audio.src) {
-        try {
-            await audio.play();
-        } catch (error) {
-            isPlaying = false;
-            console.error('Audio playback could not start:', error);
-        }
+    } else if (youtubePlayer) {
+        youtubePlayer.playVideo();
     } else {
         await playTrack(currentTrack);
         return;
@@ -660,6 +708,7 @@ musicPlayerLike?.addEventListener('click', event => {
 musicExpandedLike?.addEventListener('click', toggleCurrentTrackLike);
 musicVolume?.addEventListener('input', event => {
     audio.volume = Number(event.target.value) / 100;
+    youtubePlayer?.setVolume(Number(event.target.value));
 });
 musicQueueButtons.forEach(button => {
     button.addEventListener('click', event => {
