@@ -617,107 +617,27 @@ loadTrendingMusic();
 startBackendStatusMonitor();
 
 /* ==========================================================================
-   Theme Switcher & Section Switcher
+   Theme Switcher & Section Switcher — owned entirely by js/movies.js
+   ==========================================================================
+   js/movies.js already implements initTheme()/setTheme() (with its own
+   #theme-toggle click listener and its own 'myWay_theme' localStorage
+   key) and switchSection()/currentSection (with its own click listeners
+   on #music-section-tab / #movies-section-tab, plus the body class,
+   .hidden toggling on #movie-results/#music-results, page-nav visibility,
+   and search placeholder text). It also already calls switchSection('music')
+   on load.
+
+   app.js used to duplicate both systems: a second initTheme() reading a
+   different localStorage key ('myway_theme', lowercase) and a second set
+   of click listeners on the same #theme-toggle and section-tab buttons.
+   Because movies.js is a classic <script> that runs synchronously before
+   this module (type="module" is always deferred), and both handlers fired
+   on every click, this caused exactly the symptoms reported: the theme
+   toggle appearing to do nothing (two handlers racing/reverting each
+   other) and the page occasionally landing on the wrong section until a
+   manual tab click forced a resync.
+
+   inMusicSection() below still just reads body.music-section-active,
+   which movies.js's switchSection() sets — so nothing here needs to
+   duplicate that logic anymore, it only needs to read it.
    ========================================================================== */
-
-function initTheme() {
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const themeToggleIcon = document.getElementById('theme-toggle-icon');
-    const themeToggleLabel = document.getElementById('theme-toggle-label');
-
-    const savedTheme = localStorage.getItem('myway_theme') || 'light';
-    applyTheme(savedTheme);
-
-    themeToggleBtn?.addEventListener('click', () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        applyTheme(newTheme);
-    });
-
-    function applyTheme(theme) {
-        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-        if (theme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            if (themeToggleIcon) themeToggleIcon.textContent = '☀️';
-            if (themeToggleLabel) themeToggleLabel.textContent = 'Light Mode';
-            if (themeColorMeta) themeColorMeta.setAttribute('content', '#121214');
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-            if (themeToggleIcon) themeToggleIcon.textContent = '🌙';
-            if (themeToggleLabel) themeToggleLabel.textContent = 'Dark Mode';
-            if (themeColorMeta) themeColorMeta.setAttribute('content', '#8A2BE2');
-        }
-        localStorage.setItem('myway_theme', theme);
-    }
-}
-
-function initPrimaryNavigation() {
-    const musicTab = document.getElementById('music-section-tab');
-    const moviesTab = document.getElementById('movies-section-tab');
-    const movieResults = document.getElementById('movie-results');
-    const musicResults = document.getElementById('music-results');
-
-    function activateMusic() {
-        document.body.classList.add('music-section-active');
-        musicTab?.classList.add('active');
-        musicTab?.setAttribute('aria-selected', 'true');
-        moviesTab?.classList.remove('active');
-        moviesTab?.setAttribute('aria-selected', 'false');
-
-        if (movieResults) movieResults.hidden = true;
-        if (musicResults) musicResults.hidden = false;
-    }
-
-    function activateMovies() {
-        document.body.classList.remove('music-section-active');
-        moviesTab?.classList.add('active');
-        moviesTab?.setAttribute('aria-selected', 'true');
-        musicTab?.classList.remove('active');
-        musicTab?.setAttribute('aria-selected', 'false');
-
-        if (movieResults) movieResults.hidden = false;
-        if (musicResults) musicResults.hidden = true;
-    }
-
-    musicTab?.addEventListener('click', activateMusic);
-    moviesTab?.addEventListener('click', activateMovies);
-
-    function syncToActiveTab() {
-        if (musicTab?.classList.contains('active') || document.body.classList.contains('music-section-active')) {
-            activateMusic();
-        } else {
-            activateMovies();
-        }
-    }
-
-    // Sync the actual page state (body class + which <main> is visible)
-    // to whichever tab the markup marks as active on load. Without this,
-    // the Music tab can render as "active" while #movie-results is still
-    // the one showing, #music-results stays hidden, the 3-part movies
-    // navbar stays visible, and the music-only dark styling (e.g. the
-    // theme-toggle button surface) never gets applied until the user
-    // clicks Movies then Music again.
-    syncToActiveTab();
-    initPrimaryNavigation.lastSync = syncToActiveTab;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-    initPrimaryNavigation();
-
-    // Defensive re-sync: js/movies.js is a separate, independently
-    // loaded classic script that renders its own default view and may
-    // register its own DOMContentLoaded/async logic. If it runs after
-    // (or asynchronously past) the point above and touches body classes
-    // or the #movie-results/#music-results hidden state, the page can
-    // visibly land on the wrong section on first load (movies navbar +
-    // no music content) even though the Music tab is marked active in
-    // the markup — until the user manually clicks a tab and forces a
-    // fresh, correct sync. Re-running the same sync one tick later,
-    // after the whole document (including all classic scripts and any
-    // of their own load-time async work that resolves quickly) has
-    // settled, closes that race without needing to touch movies.js.
-    window.addEventListener('load', () => {
-        initPrimaryNavigation.lastSync?.();
-    });
-});

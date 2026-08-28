@@ -78,23 +78,21 @@ function slugify(text) {
 
 // --- DARK MODE THEME MANAGEMENT ---
 function initTheme() {
-    const savedTheme = localStorage.getItem('myWay_theme');
-    if (savedTheme) {
-        setTheme(savedTheme);
-    } else {
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setTheme(prefersDark ? 'dark' : 'light');
-    }
+    // Default is always Light Mode, regardless of the OS/browser color
+    // scheme preference, unless the user has explicitly toggled it
+    // before (saved in localStorage).
+    const savedTheme = localStorage.getItem('myWay_theme') || 'light';
+    setTheme(savedTheme);
 }
 
 function setTheme(theme) {
     if (theme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
-        if (themeToggleIcon) themeToggleIcon.textContent = 'â˜€ï¸';
+        if (themeToggleIcon) themeToggleIcon.textContent = '☀️';
         if (themeToggleLabel) themeToggleLabel.textContent = 'Light Mode';
     } else {
         document.documentElement.removeAttribute('data-theme');
-        if (themeToggleIcon) themeToggleIcon.textContent = 'ðŸŒ™';
+        if (themeToggleIcon) themeToggleIcon.textContent = '🌙';
         if (themeToggleLabel) themeToggleLabel.textContent = 'Dark Mode';
     }
     localStorage.setItem('myWay_theme', theme);
@@ -128,7 +126,7 @@ function saveWatchlistToStorage() {
         localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(watchlistData));
     } catch (error) {
         console.error('Error saving watchlist to localStorage:', error);
-        showToast('Could not save â€” storage full or disabled.');
+        showToast('Could not save — storage full or disabled.');
     }
 }
 
@@ -141,7 +139,7 @@ function updateLikeButtons() {
     if (modalBtn) {
         const liked = currentWatchlist.has(parseInt(modalBtn.dataset.id));
         modalBtn.classList.toggle('liked', liked);
-        modalBtn.textContent = liked ? 'âœ“ In Watchlist' : '+ Add to Watchlist';
+        modalBtn.textContent = liked ? '✓ In Watchlist' : '+ Add to Watchlist';
     }
 }
 
@@ -399,8 +397,8 @@ function renderModalContent(movie) {
                 </div>
                 <p class="modal-overview">${movie.overview ? escapeHtml(movie.overview) : 'No overview available.'}</p>
                 <div class="modal-actions">
-                    <button id="modal-watchlist-btn" class="modal-watchlist-btn ${liked ? 'liked' : ''}" data-id="${movie.id}">${liked ? 'âœ“ In Watchlist' : '+ Add to Watchlist'}</button>
-                    ${trailerKey ? `<button class="modal-trailer-btn" onclick="openTrailerModal('${trailerKey}')">â–¶ Watch Trailer</button>` : ''}
+                    <button id="modal-watchlist-btn" class="modal-watchlist-btn ${liked ? 'liked' : ''}" data-id="${movie.id}">${liked ? '✓ In Watchlist' : '+ Add to Watchlist'}</button>
+                    ${trailerKey ? `<button class="modal-trailer-btn" onclick="openTrailerModal('${trailerKey}')">▶ Watch Trailer</button>` : ''}
                 </div>
             </div>
         </div>
@@ -929,7 +927,7 @@ async function loadMoreSearchResults() {
         console.error('Error loading more search results:', error);
         skeletonWrapper.remove();
         btn.disabled = false;
-        btn.textContent = error.message === 'HTTP_429_RATE_LIMIT' ? 'Rate limited â€” Retry in a moment' : 'Try Again';
+        btn.textContent = error.message === 'HTTP_429_RATE_LIMIT' ? 'Rate limited — Retry in a moment' : 'Try Again';
     }
 }
 
