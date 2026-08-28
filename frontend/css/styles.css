@@ -1779,7 +1779,7 @@ body.music-section-active .music-page-nav {
 @media (min-width: 800px) {
     .music-bottom-nav {
         display: flex !important;
-        bottom: 90px;
+        bottom: 0;
         height: 48px;
         padding-bottom: 0;
         background: var(--color-bg-secondary);
@@ -1797,7 +1797,7 @@ body.music-section-active .music-page-nav {
     body.music-section-active .section-page-nav.music-page-nav {
         display: none !important;
     }
-    #music-results { padding: 42px 32px 120px; }
+    #music-results { padding: 42px 32px calc(120px + 48px); }
     .music-content-grid { grid-template-columns: minmax(0, 1fr) 310px; }
     .music-album-grid {
         grid-auto-flow: row;
@@ -1809,7 +1809,7 @@ body.music-section-active .music-page-nav {
     .music-player {
         left: 0;
         right: 0;
-        bottom: 0;
+        bottom: 48px;
         top: auto;
         height: 90px;
         max-width: 100%;

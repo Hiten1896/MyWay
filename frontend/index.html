@@ -125,7 +125,7 @@
                 <div id="music-discovery-list" class="music-album-grid music-song-list"><p class="music-empty-state">Loading today's trending songs...</p></div>
             </section>
 
-            <aside id="music-queue" class="music-queue" aria-labelledby="queue-title">
+            <aside id="music-queue" class="music-queue" aria-labelledby="queue-title" hidden>
                 <h3 id="queue-title">Up next</h3>
                 <p class="music-empty-state">Play a song to load more from that artist.</p>
             </aside>
@@ -186,15 +186,11 @@
         <span aria-hidden="true">♪</span>
     </div>
 
-    <!-- Spotify-style bottom tab bar (mobile music view only) -->
+    <!-- Music navigation bar -->
     <nav class="music-bottom-nav" role="tablist" aria-label="Music navigation">
         <button id="music-nav-home" class="active" type="button" role="tab" aria-selected="true">
             <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 11.5 12 4l9 7.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
             Home
-        </button>
-        <button id="music-nav-search" type="button" role="tab" aria-selected="false">
-            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke-linecap="round" stroke-linejoin="round"/><path stroke-linecap="round" stroke-linejoin="round" d="m20 20-3.5-3.5"/></svg>
-            Search
         </button>
         <button id="music-nav-liked" type="button" role="tab" aria-selected="false">
             <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20.5s-7.5-4.6-9.6-9.2C1 8 2.4 4.8 5.6 4c2-.5 3.9.3 5 1.9l1.4 2 1.4-2c1.1-1.6 3-2.4 5-1.9 3.2.8 4.6 4 3.2 7.3-2.1 4.6-9.6 9.2-9.6 9.2Z"/></svg>

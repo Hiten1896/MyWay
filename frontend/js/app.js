@@ -57,6 +57,18 @@ function createAudioPlayer() {
     const player = new Audio();
     player.preload = 'none';
 
+    player.addEventListener('play', () => {
+        if (player !== audio) return;
+        isPlaying = true;
+        updatePlayerButton();
+    });
+
+    player.addEventListener('pause', () => {
+        if (player !== audio) return;
+        isPlaying = false;
+        updatePlayerButton();
+    });
+
     player.addEventListener('ended', () => {
         if (player !== audio) return;
         if (repeatEnabled && currentTrack) {
@@ -235,6 +247,7 @@ async function playQuery(query) {
 async function loadUpNext(artist, currentId) {
     if (!musicQueue || !artist) return;
     const requestId = ++upNextRequestId;
+    musicQueue.hidden = false;
     musicQueue.innerHTML = '<h3 id="queue-title">Up next</h3><p class="music-empty-state">Loading more from this artist...</p>';
     try {
         const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(`${artist} official songs`)}`);
@@ -498,12 +511,20 @@ async function loadTrack(track) {
         const data = await response.json();
         if (requestId !== streamRequestId) return;
         audio.src = data.url;
-        await audio.play();
+        audio.load();
+        try {
+            await audio.play();
+        } catch (playError) {
+            // Browsers can reject playback after the async stream lookup.
+            // Keep the source loaded so the visible Play button can retry it.
+            if (playError.name !== 'NotAllowedError') throw playError;
+            isPlaying = false;
+        }
         if (requestId !== streamRequestId) {
             audio.pause();
             return;
         }
-        isPlaying = true;
+        updatePlayerButton();
     } catch (error) {
         if (error.name === 'AbortError' || requestId !== streamRequestId) return;
         console.error('Track playback failed:', error);
@@ -518,8 +539,12 @@ async function togglePlayback() {
         audio.pause();
         isPlaying = false;
     } else if (audio.src) {
-        await audio.play();
-        isPlaying = true;
+        try {
+            await audio.play();
+        } catch (error) {
+            isPlaying = false;
+            console.error('Audio playback could not start:', error);
+        }
     } else {
         await playTrack(currentTrack);
         return;

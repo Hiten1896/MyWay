@@ -1208,19 +1208,16 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// --- MOBILE BOTTOM NAV (Spotify-style) ---
-// Bridges the new bottom tab bar to the existing music tab controls
-// and search input, so no other logic needs to change.
+// --- MUSIC BOTTOM NAV ---
 (function setupMusicBottomNav() {
     const navHome = document.getElementById('music-nav-home');
-    const navSearch = document.getElementById('music-nav-search');
     const navLiked = document.getElementById('music-nav-liked');
     const homeTabBtn = document.getElementById('music-home-tab');
     const likedTabBtn = document.getElementById('music-liked-tab');
-    if (!navHome || !navSearch || !navLiked) return;
+    if (!navHome || !navLiked) return;
 
     function setActive(btn) {
-        [navHome, navSearch, navLiked].forEach(b => {
+        [navHome, navLiked].forEach(b => {
             b.classList.toggle('active', b === btn);
             b.setAttribute('aria-selected', String(b === btn));
         });
@@ -1234,16 +1231,6 @@ if ('serviceWorker' in navigator) {
     navLiked.addEventListener('click', () => {
         setActive(navLiked);
         if (likedTabBtn) likedTabBtn.click();
-    });
-
-    navSearch.addEventListener('click', () => {
-        setActive(navSearch);
-        if (homeTabBtn) homeTabBtn.click();
-        const input = document.getElementById('search-input');
-        if (input) {
-            input.focus();
-            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
     });
 
     // Keep bottom nav in sync if the (hidden-on-mobile) desktop tabs change

@@ -125,16 +125,20 @@ app.get('/api/trending', async (req, res) => {
     const today = new Date().toISOString().slice(0, 10);
     try {
         if (GOOGLE_API_KEY) {
-            const resultSets = await Promise.all(
-                TRENDING_MUSIC_QUERIES.map(query => searchGoogleMusic(`${query} ${today}`, 6))
-            );
-            const seenIds = new Set();
-            const videos = resultSets.flat().filter(video => {
-                if (seenIds.has(video.id)) return false;
-                seenIds.add(video.id);
-                return true;
-            }).slice(0, 15);
-            return res.json({ date: today, videos });
+            try {
+                const resultSets = await Promise.all(
+                    TRENDING_MUSIC_QUERIES.map(query => searchGoogleMusic(`${query} ${today}`, 6))
+                );
+                const seenIds = new Set();
+                const videos = resultSets.flat().filter(video => {
+                    if (seenIds.has(video.id)) return false;
+                    seenIds.add(video.id);
+                    return true;
+                }).slice(0, 15);
+                return res.json({ date: today, videos });
+            } catch (error) {
+                console.warn('Google trending failed; using YouTube search fallback:', error.message);
+            }
         }
         const resultSets = await Promise.all(
             TRENDING_MUSIC_QUERIES.map(query => searchWithFallback(`${query} ${today}`))
@@ -160,7 +164,13 @@ app.get('/api/suggestions', async (req, res) => {
     if (!GOOGLE_API_KEY) return res.status(503).json({ error: 'Google music search is not configured.' });
 
     try {
-        const suggestions = await searchGoogleMusic(`${query} song`, 6);
+        let suggestions;
+        try {
+            suggestions = await searchGoogleMusic(`${query} song`, 6);
+        } catch (error) {
+            console.warn('Google suggestions failed; using YouTube search fallback:', error.message);
+            suggestions = await searchWithFallback(query);
+        }
         res.json({ query, suggestions });
     } catch (error) {
         console.error('Google suggestions lookup failed:', error.message);
