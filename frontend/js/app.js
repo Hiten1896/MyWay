@@ -34,6 +34,7 @@ const musicHomeView = document.getElementById('music-home-view');
 const musicLikedView = document.getElementById('music-liked-view');
 const musicLikedList = document.getElementById('music-liked-list');
 const musicQueue = document.getElementById('music-queue');
+const musicLanguageFilters = document.getElementById('music-language-filters');
 const musicPlayerLike = document.getElementById('music-player-like');
 const musicExpandedLike = document.getElementById('music-expanded-like');
 const musicVolume = document.querySelector('.music-player-volume input');
@@ -55,6 +56,7 @@ let streamRequestController = null;
 let streamRequestId = 0;
 let upNextRequestId = 0;
 let loadedUpNextKey = '';
+let musicResultsMode = 'home';
 let audio;
 
 function createAudioPlayer() {
@@ -241,6 +243,11 @@ function showMusicLoading() {
     `).join('');
 }
 
+function setMusicResultsMode(mode) {
+    musicResultsMode = mode;
+    if (musicLanguageFilters) musicLanguageFilters.hidden = mode !== 'home';
+}
+
 function escapeHtml(value) {
     return String(value)
         .replaceAll('&', '&amp;')
@@ -251,6 +258,7 @@ function escapeHtml(value) {
 }
 
 async function searchMusic(query, language = '') {
+    setMusicResultsMode('results');
     showMusicLoading();
     try {
         const languageParam = language ? `&language=${encodeURIComponent(language)}` : '';
@@ -303,6 +311,7 @@ async function loadUpNext(artist, currentId) {
 
 async function loadTrendingMusic() {
     try {
+        setMusicResultsMode('home');
     showMusicLoading();
         const response = await fetch(`${API_BASE}/trending`);
         if (!response.ok) throw new Error('Trending music request failed');
@@ -321,11 +330,13 @@ const musicMoodQueries = { english: 'english', hindi: 'hindi', punjabi: 'punjabi
 
 document.querySelectorAll('.music-mood').forEach(moodButton => {
     moodButton.addEventListener('click', () => {
+        setMusicResultsMode('results');
+        showMusicLoading();
         document.querySelectorAll('.music-mood').forEach(button => button.classList.remove('active'));
         moodButton.classList.add('active');
         const language = moodButton.dataset.language || 'all';
         const query = musicMoodQueries[language] || '';
-        const request = searchMusic(query, language);
+        const request = language === 'all' ? loadTrendingMusic() : searchMusic(query, language);
         request.catch(error => console.error('Music filter failed:', error));
     });
 });
@@ -486,7 +497,10 @@ async function fetchMusicSuggestions(query) {
     }
 }
 
-musicHomeTab?.addEventListener('click', () => switchMusicView('home'));
+musicHomeTab?.addEventListener('click', () => {
+    switchMusicView('home');
+    if (musicResultsMode !== 'home') loadTrendingMusic().catch(error => console.error('Trending music failed:', error));
+});
 musicLikedTab?.addEventListener('click', () => switchMusicView('liked'));
 musicSectionTab?.addEventListener('click', () => switchMusicView('home'));
 
