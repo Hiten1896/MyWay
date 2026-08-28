@@ -47,8 +47,8 @@
                     <svg id="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </button>
             </div>
-            <!-- Live Suggestions Box for iTunes Autocomplete -->
-            <ul id="suggestions-box" class="suggestions-box" style="position: absolute; top: 100%; left: 0; right: 0; background: #1f2937; color: #fff; list-style: none; padding: 0; margin: 4px 0 0 0; display: none; z-index: 1000; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);"></ul>
+            <!-- Live suggestions box: populated by fetchMusicSuggestions() in js/app.js
+                 using the YouTube Data API v3 (Google), formatted as "songname - singer name" -->
             <div id="suggestion-box"></div>
         </div>
     </header>
@@ -275,8 +275,6 @@
     <script src="config.js"></script>
     <script src="js/config.js"></script>
     <script src="js/movies.js"></script>
-    <script src="js/music.js"></script>
-    <script src="js/search.js"></script>
     <script type="module" src="/js/app.js"></script>
 </body>
 </html>

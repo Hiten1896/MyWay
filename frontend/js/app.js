@@ -319,8 +319,25 @@ function switchMusicView(viewName) {
 }
 
 /* ==========================================================================
-   iTunes Search API Integration for Live Suggestions
+   Google (YouTube Data API v3) Integration for Live Suggestions
+   Renders each suggestion strictly as "songname - singer name". Clicking
+   a suggestion sends that exact "songname - singer name" string to our
+   own backend (/api/search), which resolves and streams the full song —
+   suggestions never play audio directly themselves.
    ========================================================================== */
+
+// Set your Google API key (with the YouTube Data API v3 enabled) here,
+// or provide it via VITE_GOOGLE_API_KEY in your .env file (preferred,
+// picked up automatically by Vite), or via window.GOOGLE_API_KEY from
+// config.js as a fallback for non-Vite/static deployments.
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || window.GOOGLE_API_KEY || '';
+
+function formatSuggestionLabel(title, artist) {
+    const cleanTitle = String(title || '').trim();
+    const cleanArtist = String(artist || '').trim();
+    return cleanArtist ? `${cleanTitle} - ${cleanArtist}` : cleanTitle;
+}
+
 async function fetchMusicSuggestions(query) {
     const requestId = ++suggestionRequestId;
     if (!query || query.trim().length < 2 || !inMusicSection()) {
@@ -328,22 +345,50 @@ async function fetchMusicSuggestions(query) {
         return;
     }
 
-    const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=6`;
+    if (!GOOGLE_API_KEY) {
+        console.warn('Google API key not configured; live suggestions are disabled.');
+        closeMusicSuggestions();
+        return;
+    }
+
+    const params = new URLSearchParams({
+        part: 'snippet',
+        type: 'video',
+        videoCategoryId: '10', // Music category
+        maxResults: '6',
+        q: `${query} song`,
+        key: GOOGLE_API_KEY
+    });
+    const youtubeUrl = `https://www.googleapis.com/youtube/v3/search?${params.toString()}`;
 
     try {
-        const response = await fetch(itunesUrl);
-        if (!response.ok) throw new Error('iTunes suggestions failed');
-        
+        const response = await fetch(youtubeUrl);
+        if (!response.ok) throw new Error('YouTube suggestions failed');
+
         const data = await response.json();
         if (requestId !== suggestionRequestId || !inMusicSection()) return;
 
-        const suggestions = (data.results || []).map(track => ({
-            id: track.trackId,
-            title: track.trackName,
-            artist: track.artistName,
-            thumbnail: track.artworkUrl100?.replace('100x100bb', '300x300bb') || track.artworkUrl60,
-            previewUrl: track.previewUrl
-        }));
+        const suggestions = (data.items || [])
+            .filter(item => item.id && item.id.videoId)
+            .map(item => {
+                const rawTitle = item.snippet?.title || '';
+                const channel = item.snippet?.channelTitle || '';
+                // Best-effort split of "Song - Artist" or "Artist - Song"
+                // style YouTube titles; otherwise fall back to the channel
+                // name as the artist.
+                const dashSplit = rawTitle.split(/\s[-–—]\s/);
+                let title = rawTitle;
+                let artist = channel;
+                if (dashSplit.length >= 2) {
+                    [title, artist] = dashSplit;
+                }
+                return {
+                    id: item.id.videoId,
+                    title: title.trim(),
+                    artist: artist.trim(),
+                    thumbnail: item.snippet?.thumbnails?.default?.url || ''
+                };
+            });
 
         if (suggestions.length === 0) {
             closeMusicSuggestions();
@@ -353,10 +398,8 @@ async function fetchMusicSuggestions(query) {
         if (suggestionBox) {
             suggestionBox.innerHTML = suggestions.map(track => `
                 <button class="suggestion-item music-suggestion-item" type="button">
-                    ${track.thumbnail ? `<img src="${escapeHtml(track.thumbnail)}" alt="" />` : ''}
                     <div>
-                        <strong>${escapeHtml(track.title)}</strong>
-                        <small>${escapeHtml(track.artist)}</small>
+                        <strong>${escapeHtml(formatSuggestionLabel(track.title, track.artist))}</strong>
                     </div>
                 </button>
             `).join('');
@@ -366,30 +409,21 @@ async function fetchMusicSuggestions(query) {
             suggestionBox.querySelectorAll('.music-suggestion-item').forEach((item, index) => {
                 item.addEventListener('click', () => {
                     const selectedTrack = suggestions[index];
-                    if (searchInput) searchInput.value = selectedTrack.title;
+                    const clickedQuery = formatSuggestionLabel(selectedTrack.title, selectedTrack.artist);
+
+                    if (searchInput) searchInput.value = clickedQuery;
                     closeMusicSuggestions();
 
-                    if (selectedTrack.previewUrl) {
-                        queue = suggestions;
-                        currentIndex = index;
-                        currentTrack = selectedTrack;
-                        
-                        replaceAudioPlayer();
-                        audio.src = selectedTrack.previewUrl;
-                        audio.play().then(() => {
-                            isPlaying = true;
-                            if (musicPlayer) musicPlayer.hidden = false;
-                            updatePlayerControls();
-                        }).catch(err => console.error("Playback failed:", err));
-                    } else {
-                        searchMusic(selectedTrack.title);
-                    }
+                    // Hand the exact clicked "songname - singer name" query
+                    // to our own server so it can find and stream the song,
+                    // exactly like a normal search submission.
+                    searchMusic(clickedQuery).catch(error => console.error('Music search failed:', error));
                 });
             });
         }
     } catch (error) {
         if (requestId === suggestionRequestId) closeMusicSuggestions();
-        console.error('iTunes suggestions failed:', error);
+        console.error('YouTube suggestions failed:', error);
     }
 }
 
@@ -601,14 +635,17 @@ function initTheme() {
     });
 
     function applyTheme(theme) {
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
         if (theme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
             if (themeToggleIcon) themeToggleIcon.textContent = '☀️';
             if (themeToggleLabel) themeToggleLabel.textContent = 'Light Mode';
+            if (themeColorMeta) themeColorMeta.setAttribute('content', '#121214');
         } else {
             document.documentElement.removeAttribute('data-theme');
             if (themeToggleIcon) themeToggleIcon.textContent = '🌙';
             if (themeToggleLabel) themeToggleLabel.textContent = 'Dark Mode';
+            if (themeColorMeta) themeColorMeta.setAttribute('content', '#8A2BE2');
         }
         localStorage.setItem('myway_theme', theme);
     }

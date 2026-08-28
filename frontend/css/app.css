@@ -14,9 +14,22 @@ html, body {
 }
 
 /* Prevent iOS "bounce" rubber-banding from revealing white background
-   behind the dark music surface. */
+   behind the dark music surface, WITHOUT blocking normal touch/momentum
+   vertical scrolling. `overscroll-behavior-y: none` on iOS Safari can
+   suppress inertial touch scrolling on the whole document in some
+   versions, forcing users to drag the scrollbar thumb instead of
+   swiping. `contain` keeps the bounce from the music surface without
+   that side effect. */
 html, body {
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: contain;
+}
+
+/* Belt-and-braces: make sure the document is always allowed to scroll
+   vertically. Nothing should set a fixed height + overflow:hidden on
+   these that would trap content and require manual scrollbar dragging. */
+html, body {
+    overflow-y: auto !important;
+    height: auto !important;
 }
 
 /* Respect safe areas on notch/gesture-bar devices for the fixed
@@ -58,13 +71,12 @@ html, body {
     }
 }
 
-/* iTunes Search Suggestion Styles */
+/* Live Search Suggestion Styles ("songname - singer name") */
 .music-suggestion-item {
   display: flex;
   align-items: center;
-  gap: 10px;
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 12px;
   text-align: left;
   background: transparent;
   border: none;
@@ -77,30 +89,9 @@ html, body {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.music-suggestion-item img {
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.music-suggestion-item div {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
 .music-suggestion-item strong {
   font-size: 0.9rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.music-suggestion-item small {
-  font-size: 0.75rem;
-  opacity: 0.7;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
