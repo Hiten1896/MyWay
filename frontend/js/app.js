@@ -560,3 +560,70 @@ if ('mediaSession' in navigator) {
 
 loadTrendingMusic();
 startBackendStatusMonitor();
+
+/* ==========================================================================
+   Theme Switcher & Section Switcher Fixes
+   ========================================================================== */
+
+function initTheme() {
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeToggleIcon = document.getElementById('theme-toggle-icon');
+    const themeToggleLabel = document.getElementById('theme-toggle-label');
+
+    const savedTheme = localStorage.getItem('myway_theme') || 'light';
+    applyTheme(savedTheme);
+
+    themeToggleBtn?.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+    });
+
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if (themeToggleIcon) themeToggleIcon.textContent = '☀️';
+            if (themeToggleLabel) themeToggleLabel.textContent = 'Light Mode';
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            if (themeToggleIcon) themeToggleIcon.textContent = '🌙';
+            if (themeToggleLabel) themeToggleLabel.textContent = 'Dark Mode';
+        }
+        localStorage.setItem('myway_theme', theme);
+    }
+}
+
+function initPrimaryNavigation() {
+    const musicTab = document.getElementById('music-section-tab');
+    const moviesTab = document.getElementById('movies-section-tab');
+    const movieResults = document.getElementById('movie-results');
+    const musicResults = document.getElementById('music-results');
+
+    musicTab?.addEventListener('click', () => {
+        document.body.classList.add('music-section-active');
+        musicTab.classList.add('active');
+        musicTab.setAttribute('aria-selected', 'true');
+        moviesTab?.classList.remove('active');
+        moviesTab?.setAttribute('aria-selected', 'false');
+
+        if (movieResults) movieResults.hidden = true;
+        if (musicResults) musicResults.hidden = false;
+    });
+
+    moviesTab?.addEventListener('click', () => {
+        document.body.classList.remove('music-section-active');
+        moviesTab.classList.add('active');
+        moviesTab.setAttribute('aria-selected', 'true');
+        musicTab?.classList.remove('active');
+        musicTab?.setAttribute('aria-selected', 'false');
+
+        if (movieResults) movieResults.hidden = false;
+        if (musicResults) musicResults.hidden = true;
+    });
+}
+
+// Ensure these fire inside your main DOMContentLoaded listener in app.js
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    initPrimaryNavigation();
+});
