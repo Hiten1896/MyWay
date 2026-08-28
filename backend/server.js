@@ -14,6 +14,8 @@ const TRENDING_MUSIC_QUERIES = [
     'new music releases today official song',
     'top songs this week official music video'
 ];
+const musicCache = new Map();
+const MUSIC_CACHE_TTL_MS = 5 * 60 * 1000;
 
 const NON_MUSIC_PATTERN = /\b(podcast|interview|reaction|review|commentary|news|vlog|episode|talk show|livestream|live stream|gameplay|gaming|trailer|teaser|shorts?|tutorial|documentary|prank|challenge|unboxing|influencer)\b/i;
 const MUSIC_PATTERN = /\b(official (music )?(video|audio)|music video|lyrics?|audio|song|soundtrack|remix|karaoke|instrumental|cover|acoustic|slowed|sped up|nightcore|visualizer|mixtape|album)\b/i;
@@ -86,6 +88,13 @@ function normalizeGoogleVideo(item, query) {
     };
 }
 
+function formatDuration(value) {
+    const match = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(value || '');
+    if (!match) return { duration: null, seconds: 0 };
+    const seconds = Number(match[1] || 0) * 3600 + Number(match[2] || 0) * 60 + Number(match[3] || 0);
+    return { duration: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, seconds };
+}
+
 async function searchGoogleMusic(query, maxResults = 6) {
     if (!GOOGLE_API_KEY) return [];
     const params = new URLSearchParams({
@@ -99,9 +108,31 @@ async function searchGoogleMusic(query, maxResults = 6) {
     const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
     if (!response.ok) throw new Error(`Google YouTube request failed with ${response.status}`);
     const data = await response.json();
-    return (data.items || [])
+    const videos = (data.items || [])
         .filter(item => item.id?.videoId)
         .map(item => normalizeGoogleVideo(item, query));
+    if (!videos.length) return videos;
+
+    const detailParams = new URLSearchParams({
+        part: 'contentDetails',
+        id: videos.map(video => video.id).join(','),
+        key: GOOGLE_API_KEY
+    });
+    const detailResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?${detailParams}`);
+    if (detailResponse.ok) {
+        const details = await detailResponse.json();
+        const durations = new Map((details.items || []).map(item => [item.id, formatDuration(item.contentDetails?.duration)]));
+        videos.forEach(video => Object.assign(video, durations.get(video.id) || {}));
+    }
+    return videos;
+}
+
+async function cachedMusic(key, loader) {
+    const cached = musicCache.get(key);
+    if (cached && cached.expiresAt > Date.now()) return cached.value;
+    const value = await loader();
+    musicCache.set(key, { value, expiresAt: Date.now() + MUSIC_CACHE_TTL_MS });
+    return value;
 }
 
 async function searchWithFallback(query) {
@@ -126,9 +157,9 @@ app.get('/api/trending', async (req, res) => {
     try {
         if (GOOGLE_API_KEY) {
             try {
-                const resultSets = await Promise.all(
+                const resultSets = await cachedMusic(`trending:${today}`, () => Promise.all(
                     TRENDING_MUSIC_QUERIES.map(query => searchGoogleMusic(`${query} ${today}`, 6))
-                );
+                ));
                 const seenIds = new Set();
                 const videos = resultSets.flat().filter(video => {
                     if (seenIds.has(video.id)) return false;
@@ -164,13 +195,7 @@ app.get('/api/suggestions', async (req, res) => {
     if (!GOOGLE_API_KEY) return res.status(503).json({ error: 'Google music search is not configured.' });
 
     try {
-        let suggestions;
-        try {
-            suggestions = await searchGoogleMusic(`${query} song`, 6);
-        } catch (error) {
-            console.warn('Google suggestions failed; using YouTube search fallback:', error.message);
-            suggestions = await searchWithFallback(query);
-        }
+        const suggestions = await cachedMusic(`suggestion:${query.toLowerCase()}`, () => searchGoogleMusic(`${query} song`, 6));
         res.json({ query, suggestions });
     } catch (error) {
         console.error('Google suggestions lookup failed:', error.message);

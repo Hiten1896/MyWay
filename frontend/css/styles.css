@@ -1391,6 +1391,47 @@ header h1 { line-height: 1.1; }
 .music-song-list { display: block; overflow: hidden; background: var(--music-surface); border: 1px solid var(--music-border); border-radius: 12px; }
 .music-empty-state { padding: 36px 20px; color: var(--music-text-muted); text-align: center; }
 
+.music-discovery-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 16px;
+    overflow: visible;
+    background: transparent;
+    border: 0;
+}
+
+.music-discovery-list .music-song-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    min-height: 280px;
+    padding: 0;
+    overflow: hidden;
+    background: var(--music-surface);
+    border: 1px solid var(--music-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.music-discovery-list .music-song-cover {
+    width: 100%;
+    height: 190px;
+    border-radius: 0;
+}
+
+.music-discovery-list .music-song-copy {
+    padding: 14px 52px 14px 14px;
+}
+
+.music-discovery-list .music-song-copy strong { font-size: 0.9rem; }
+.music-discovery-list .music-song-copy small { margin-top: 5px; }
+.music-discovery-list .music-like-btn,
+.music-discovery-list .music-play-btn { position: absolute; bottom: 12px; }
+.music-discovery-list .music-like-btn { right: 48px; }
+.music-discovery-list .music-play-btn { right: 10px; }
+
 .music-queue {
     padding: 18px;
     background: var(--music-surface);
@@ -1981,6 +2022,8 @@ body.music-section-active .music-page-nav {
 
 @media (max-width: 799px) {
     #music-results { padding: 20px 16px calc(116px + var(--mini-player-h)); }
+    .music-discovery-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .music-discovery-list .music-song-cover { height: 150px; }
 }
 
 @media (max-width: 380px) {

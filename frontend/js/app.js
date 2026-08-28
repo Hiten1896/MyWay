@@ -61,6 +61,10 @@ function createAudioPlayer() {
         if (player !== audio) return;
         isPlaying = true;
         updatePlayerButton();
+        if (currentTrack) {
+            loadedUpNextKey = `${currentTrack.artist}:${currentTrack.id}`;
+            loadUpNext(currentTrack.artist, currentTrack.id);
+        }
     });
 
     player.addEventListener('pause', () => {
@@ -163,11 +167,6 @@ function updatePlayerControls() {
             musicExpandedArt.setAttribute('aria-label', `${currentTrack.title} artwork`);
         }
         updateMediaSession();
-        const upNextKey = `${currentTrack.artist}:${currentTrack.id}`;
-        if (upNextKey !== loadedUpNextKey) {
-            loadedUpNextKey = upNextKey;
-            loadUpNext(currentTrack.artist, currentTrack.id);
-        }
     }
     [musicPrevious, musicNext, musicPlayerPrevious, musicPlayerNext].forEach(button => {
         if (button) button.disabled = queue.length < 2;
@@ -195,7 +194,7 @@ function renderSearchResults(videos) {
         return;
     }
 
-    grid.className = 'music-song-list';
+    grid.className = 'music-song-list music-discovery-list';
     grid.innerHTML = videos.map((video, index) => `
         <article class="music-song-card">
             <img class="music-song-cover" src="${escapeHtml(video.thumbnail)}" alt="" loading="lazy">
@@ -493,6 +492,8 @@ async function loadTrack(track) {
     streamRequestController = track.id ? new AbortController() : null;
     replaceAudioPlayer();
     isPlaying = false;
+    loadedUpNextKey = '';
+    if (musicQueue) musicQueue.hidden = true;
     if (musicPlayer) musicPlayer.hidden = false;
     updatePlayerControls();
 
