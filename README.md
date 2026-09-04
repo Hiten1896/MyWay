@@ -84,11 +84,8 @@ The compiled static assets will be output to `dist/`.
 ```
 myway/
 ├── index.html            # Main HTML markup
-├── js/
-│   ├── app.js            # Music discovery engine & audio player (iTunes API)
-│   └── movies.js         # Movie discovery, spotlight, categories & TMDB API
-├── css/
-│   └── styles.css        # Unified design system and layout rules
+├── main.js               # Movie and music discovery logic and audio player
+├── styles.css            # Unified design system and layout rules
 ├── package.json          # Vite scripts and dependencies
 ├── vercel.json           # Vercel deployment configuration
 └── README.md
