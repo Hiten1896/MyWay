@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="MyWay — discover popular Hollywood and Bollywood movies side by side, search, and build your own watchlist. Powered by TMDB.">
-    <meta name="theme-color" content="#8A2BE2">
+    <meta name="theme-color" content="#2563EB">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -25,13 +25,8 @@
     
     <header>
         <div class="header-top-bar flex justify-between">
-            <button id="backend-status" class="backend-status-btn" type="button" aria-live="polite" title="Music backend status">
-                <span class="backend-status-dot" aria-hidden="true"></span>
-                <span id="backend-status-label">Offline</span>
-            </button>
             <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Dark Mode">
                 <span id="theme-toggle-icon">🌙</span>
-                <span id="theme-toggle-label">Dark Mode</span>
             </button>
         </div>
         <h1>MyWay</h1>
@@ -47,27 +42,36 @@
                     <svg id="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </button>
             </div>
-            <!-- Live suggestions box: populated by fetchMusicSuggestions() in js/app.js
-                 using the YouTube Data API v3 (Google), formatted as "songname - singer name" -->
+            <!-- Live suggestions box: populated by fetchMusicSuggestions() in js/app.js (iTunes API) -->
             <div id="suggestion-box"></div>
         </div>
     </header>
 
     <nav id="category-nav">
-        <div class="section-primary-nav max-w-4xl mx-auto flex justify-center" role="tablist" aria-label="Media sections">
-            <button id="music-section-tab" class="nav-tab active" type="button" role="tab" aria-selected="true">Music</button>
-            <button id="movies-section-tab" class="nav-tab" type="button" role="tab" aria-selected="false">Movies</button>
+        <div class="section-page-nav movie-page-nav context-nav max-w-4xl mx-auto flex justify-center">
+            <button id="home-tab" class="nav-tab page-nav-tab active" data-view="home">
+                <svg class="context-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10Z"/><path d="M9 21v-7h6v7"/></svg>
+                <span>Home</span>
+            </button>
+            <button id="categories-tab" class="nav-tab page-nav-tab" data-view="categories">
+                <svg class="context-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                <span>Categories</span>
+            </button>
+            <button id="watchlist-tab" class="nav-tab page-nav-tab" data-view="watchlist">
+                <svg class="context-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-3-6 3V3Z"/></svg>
+                <span>Watchlist</span>
+            </button>
         </div>
-        <div class="section-page-nav movie-page-nav max-w-4xl mx-auto flex justify-center">
-            <button id="home-tab" class="nav-tab page-nav-tab active" data-view="home">Home</button>
-            <button id="categories-tab" class="nav-tab page-nav-tab" data-view="categories">Categories</button>
-            <button id="watchlist-tab" class="nav-tab page-nav-tab" data-view="watchlist">Watchlist</button>
+        <div class="section-page-nav music-page-nav context-nav max-w-4xl mx-auto flex justify-center" role="tablist" aria-label="Music views">
+            <button id="music-home-tab" class="nav-tab active" type="button" role="tab" aria-selected="true">
+                <svg class="context-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10Z"/><path d="M9 21v-7h6v7"/></svg>
+                <span>Home</span>
+            </button>
+            <button id="music-liked-tab" class="nav-tab" type="button" role="tab" aria-selected="false">
+                <svg class="context-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.5c0 5.5-8.8 11-8.8 11s-8.8-5.5-8.8-11A4.5 4.5 0 0 1 12 6.1a4.5 4.5 0 0 1 8.8 2.4Z"/></svg>
+                <span>Liked</span>
+            </button>
         </div>
-    </nav>
-
-    <nav class="section-page-nav music-page-nav max-w-4xl mx-auto flex justify-center" role="tablist" aria-label="Music views">
-        <button id="music-home-tab" class="nav-tab active" type="button" role="tab" aria-selected="true">Home</button>
-        <button id="music-liked-tab" class="nav-tab" type="button" role="tab" aria-selected="false">Liked</button>
     </nav>
 
     <main id="movie-results" class="max-w-7xl mx-auto" hidden>
@@ -102,10 +106,25 @@
 
     <main id="music-results">
         <div id="music-home-view">
+        <section class="music-hero" aria-labelledby="music-hero-title">
+            <div class="music-hero-copy">
+                <span class="music-hero-kicker">MYWAY MUSIC</span>
+                <h2 id="music-hero-title">A better soundtrack for right now.</h2>
+                <p>Discover handpicked songs and play a 30-second preview before you decide what belongs in your collection.</p>
+            </div>
+            <div class="music-hero-signal" aria-hidden="true">
+                <span class="music-hero-signal-line"></span>
+                <span class="music-hero-signal-line"></span>
+                <span class="music-hero-signal-line"></span>
+                <span class="music-hero-signal-line"></span>
+                <span class="music-hero-signal-line"></span>
+                <span class="music-hero-signal-line"></span>
+                <span class="music-hero-signal-line"></span>
+            </div>
+        </section>
         <section id="music-language-filters" aria-labelledby="mood-title">
             <div class="music-section-heading">
                 <h3 id="mood-title">Browse by mood</h3>
-                <span>Curated for your moment</span>
             </div>
             <div class="music-moods">
                 <button class="music-mood active" type="button" data-language="all">English</button>
@@ -119,7 +138,6 @@
             <section aria-labelledby="mixes-title">
                 <div class="music-section-heading">
                     <h3 id="mixes-title">Made for you</h3>
-                    <span>Handpicked mixes</span>
                 </div>
                 <div id="music-discovery-list" class="music-album-grid music-song-list" aria-live="polite"><p class="music-empty-state">Loading today's trending songs...</p></div>
             </section>
@@ -184,17 +202,15 @@
         <span aria-hidden="true">♪</span>
     </div>
 
-    <div id="youtube-player-host" class="youtube-player-host" aria-hidden="true"></div>
-
-    <!-- Music navigation bar -->
-    <nav class="music-bottom-nav" role="tablist" aria-label="Music navigation">
-        <button id="music-nav-home" class="active" type="button" role="tab" aria-selected="true">
-            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 11.5 12 4l9 7.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
-            Home
+    <!-- Primary media navigation -->
+    <nav class="music-bottom-nav" role="tablist" aria-label="Media navigation">
+        <button id="movies-section-tab" type="button" role="tab" aria-selected="false">
+            <svg class="nav-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 3 10 3v12L7 15V3Z"/><path d="M7 7 3 6v12l4 1M17 9l4 1v10l-4-1"/></svg>
+            <span>Movies</span>
         </button>
-        <button id="music-nav-liked" type="button" role="tab" aria-selected="false">
-            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20.5s-7.5-4.6-9.6-9.2C1 8 2.4 4.8 5.6 4c2-.5 3.9.3 5 1.9l1.4 2 1.4-2c1.1-1.6 3-2.4 5-1.9 3.2.8 4.6 4 3.2 7.3-2.1 4.6-9.6 9.2-9.6 9.2Z"/></svg>
-            Liked
+        <button id="music-section-tab" class="active" type="button" role="tab" aria-selected="true">
+            <svg class="nav-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>
+            <span>Music</span>
         </button>
     </nav>
 

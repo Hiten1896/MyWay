@@ -1,6 +1,8 @@
 # 🎬 MyWay
 
-A dual-media discovery app combining movies and music. The Movies experience is built on the [TMDB API](https://www.themoviedb.org/documentation/api), while the Music experience searches YouTube through a Node.js backend and provides audio playback, queues, and personal likes.
+A dual-media discovery app combining **Movies** and **Music**.
+- **Movies Experience**: Built on the [TMDB API](https://www.themoviedb.org/documentation/api) with 50/50 interleaved Hollywood (English) and Bollywood (Hindi) cinema.
+- **Music Experience**: A fast, client-side music discovery engine powered by the **Apple iTunes Search API**, providing high-quality 30-second audio previews, high-resolution album artwork, live type-ahead suggestions, mood/language filters, track queues, and personal collections.
 
 **[🔗 Live Demo](https://hiten1896.github.io/MyWay/)**
 
@@ -8,136 +10,96 @@ A dual-media discovery app combining movies and music. The Movies experience is 
 
 ## ✨ Features
 
-- **Home / Spotlight** — a curated, evenly-mixed feed of trending English and Hindi movies
-- **Categories** — ten genres (Action, Comedy, Horror, Romance, Sci-Fi, and more), each balanced, with a sticky scroll-spy sidebar for quick navigation
-- **Search** — debounced type-ahead autosuggest plus full search, also balanced across English/Hindi results
-- **Voice search** — tap the mic and speak a title (built on the browser's Web Speech API; hides itself gracefully on unsupported browsers)
-- **Movie detail modal** — overview, genres, runtime, rating, top cast, and a trailer link on YouTube
-- **Watchlist** — save any title with a tap of the heart icon, persisted in `localStorage` — no backend or login required
-- **Music section** — a dedicated Home and Liked experience with search suggestions and compact song rows
-- **Music player** — YouTube audio playback with expanded now-playing view, real seek controls, previous/next, repeat, shuffle, and immediate track switching
-- **Liked songs** — save YouTube tracks to the Music Liked tab using browser `localStorage`
-- **Music-only filtering** — backend filtering rejects podcasts, interviews, reactions, vlogs, influencer content, trailers, and other non-music results
-- **Fully responsive** — optimized for phones, tablets, and widescreen desktops
+### 🎬 Movies
+- **Home / Spotlight** — A curated, evenly-mixed feed of trending English and Hindi movies.
+- **Categories** — Ten genres (Action, Comedy, Horror, Romance, Sci-Fi, and more), each balanced with a sticky scroll-spy sidebar.
+- **Search** — Debounced type-ahead autosuggest plus full search, balanced across English and Hindi cinema.
+- **Voice Search** — Built on the browser's Web Speech API (supports both movie queries and music searches).
+- **Movie Detail Modal** — Overview, genres, runtime, rating, top cast, and embedded YouTube trailer links.
+- **Watchlist** — Save any title to `localStorage` with a single tap.
+
+### 🎵 Music Discovery (iTunes Engine)
+- **30-Second Audio Previews** — Instant, buffer-free playback of high-quality `.m4a` audio previews directly in the browser via native HTML5 Audio.
+- **Mood / Language Discovery** — Filter by English (Global Top Hits), Hindi (Bollywood), Punjabi, and Regional/Indie hits.
+- **Live Search & Autocomplete** — Fast debounced suggestions with track, artist, and album metadata.
+- **Up Next Artist Queue** — Automatically loads other top tracks from the currently playing artist.
+- **Music Player & Controls** — Floating mini-player and expanded now-playing sheet with real-time scrub bar, play/pause, next/previous, repeat, shuffle, and volume controls.
+- **Liked Songs** — Save favorite tracks to the Liked collection in `localStorage`.
+- **MediaSession API** — Full lockscreen controls and system media key support.
+- **Zero Backend Required** — Runs 100% on the client side without needing external servers or complex streaming containers.
+
+---
 
 ## 🧱 Tech Stack
 
 | Layer | Choice |
 |---|---|
-| Markup / Logic | HTML5 / JavaScript, served as a static frontend |
-| Styling | [Tailwind CSS (CDN)](https://tailwindcss.com/) layered under a custom CSS design system in `index.html` |
-| Data | [TMDB API](https://www.themoviedb.org/documentation/api) — posters, cast, trailers, metadata |
-| Storage | Browser `localStorage` for the movie watchlist and liked songs |
-| Music backend | Node.js, Express, CORS, `yt-search`, and `yt-dlp-exec` |
-| Deployment | Frontend on Vercel; backend on Render |
+| **Frontend Framework** | Pure HTML5 / Modern JavaScript (ES Modules), bundled with [Vite](https://vitejs.dev/) |
+| **Styling** | [Tailwind CSS (CDN)](https://tailwindcss.com/) layered with a custom CSS design system and Dark/Light mode |
+| **Movie Data** | [TMDB API (v3)](https://www.themoviedb.org/documentation/api) — posters, cast, trailers, metadata |
+| **Music Data & Audio** | [iTunes Search API](https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/iTuneSearchAPI/index.html) — 30s previews, HD artwork, tracks, and metadata |
+| **Storage** | Browser `localStorage` for Movie Watchlist and Liked Songs |
+| **Deployment** | Vercel, Netlify, or GitHub Pages (Static Hosting) |
+
+---
 
 ## 🚀 Getting Started
 
-**1. Clone the repo**
+### 1. Clone the repository
 ```bash
 git clone https://github.com/Hiten1896/myway.git
 cd myway
 ```
 
-**2. Get a free TMDB API key**
-Sign up at [themoviedb.org](https://www.themoviedb.org/signup), then generate a key under **Settings → API**. This project uses the "API Key (v3 auth)".
-
-**3. Configure environment variables**
+### 2. Configure environment variables
 ```bash
 cp .env.example .env
 ```
-Add your TMDB key to `.env`:
+Add your free TMDB API key to `.env`:
 ```env
 VITE_TMDB_API_KEY=your_tmdb_api_key
 ```
-For music suggestions and trending music, add `GOOGLE_API_KEY` only to the backend environment. Never put it in a frontend file.
 
-**4. Install dependencies**
+### 3. Install dependencies
 ```bash
 npm install
 ```
 
-**5. Run the development servers**
+### 4. Run the development server
 ```bash
 npm run dev
 ```
-Vite starts the frontend at `http://localhost:5173`. Run the backend in a second terminal:
-```bash
-npm run server:dev
-```
-The backend runs at `http://localhost:3000`.
+Open `http://localhost:5173` in your browser.
 
-The Music client uses `http://localhost:3000/api` automatically on localhost. For deployment, set `VITE_BACKEND_URL` in the Vercel or GitHub Actions environment:
-```env
-VITE_BACKEND_URL=https://your-render-service.onrender.com/api
-```
-
-**6. Deploy the backend to Render**
-Use the included `render.yaml` or create a Render Web Service with:
-- **Runtime:** Docker
-- **Build:** handled by `Dockerfile`
-- **Start command:** `npm start`
-- **Environment:** `PORT` is provided by Render automatically
-
-**7. Deploy the frontend to Vercel**
-Import the repository into Vercel and use the included `vercel.json`. It builds the `frontend/` directory as a static site. Make sure the frontend API URL points to the deployed Render service before publishing.
-
-**8. Run the combined server locally**
-```bash
-npm start
-```
-This serves the frontend and backend together at `http://localhost:3000`.
-
-**9. Build for production**
+### 5. Build for production
 ```bash
 npm run build
 ```
+The compiled static assets will be output to `dist/`.
+
+---
 
 ## 📁 Project Structure
 
 ```
 myway/
-├── frontend/             # Vercel static frontend
-│   ├── index.html        # Markup entry point
-│   ├── js/               # Music client and Firebase assets
-│   ├── css/              # Supporting styles
-│   ├── icons/            # PWA icons
-│   ├── manifest.json     # PWA manifest
-│   └── sw.js             # Service worker
-├── backend/              # Render Node.js API service
-│   ├── server.js         # YouTube search/stream backend
-│   └── Dockerfile        # Render container definition
-├── scripts/              # Deployment helper scripts
-├── render.yaml           # Render service configuration
-├── vercel.json           # Vercel frontend configuration
-├── .github/workflows/    # GitHub Actions workflows
-├── package.json           # Project metadata and Vite scripts
-└── .gitignore
+├── frontend/             # Static frontend
+│   ├── index.html        # Main HTML markup
+│   ├── js/
+│   │   ├── app.js        # Music discovery engine & audio player (iTunes API)
+│   │   ├── movies.js     # Movie discovery, spotlight, categories & TMDB API
+│   ├── css/
+│   │   ├── styles.css    # Core design system & theme variables
+│   │   └── app.css       # Supporting animations & layout rules
+│   ├── public/
+│   │   ├── manifest.json # PWA manifest
+│   │   └── sw.js         # Service worker
+├── package.json          # Vite scripts and dependencies
+├── vercel.json           # Vercel deployment configuration
+└── README.md
 ```
 
-## ⚠️ Known Limitations
-
-- The movie watchlist and liked songs are per-browser/per-device (`localStorage`) and do not sync across devices.
-- The TMDB v3 key is a client-side key by design — rate-limited, not a secret credential.
-- Render free services can sleep after inactivity, so the first backend request may be delayed while the service wakes.
-- YouTube stream URLs are temporary and are resolved on demand through `yt-dlp`.
-- Music playback depends on YouTube availability and may be affected by third-party changes or regional restrictions.
-
-## 🗺️ Roadmap
-
-- [ ] Pagination for category/search results
-- [ ] Optional account sync for the watchlist and liked songs
-- [ ] Persistent Music playlists
-
-## 🙌 Credits
-
-Built using the [TMDB API](https://www.themoviedb.org/documentation/api). This product is not endorsed or certified by TMDB.
+---
 
 ## 📄 License
-
-Licensed under the [MIT License](./LICENSE).
-
-
-
-
-
+Licensed under the [MIT License](./LISENCE).

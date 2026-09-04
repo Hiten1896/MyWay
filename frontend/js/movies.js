@@ -1,4 +1,4 @@
-﻿// --- CONFIGURATION ---
+// --- CONFIGURATION ---
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY || '';
 const API_BASE_URL = import.meta.env.VITE_TMDB_API_BASE_URL || 'https://api.themoviedb.org/3/';
 const IMAGE_BASE_URL = import.meta.env.VITE_TMDB_IMAGE_BASE_URL || 'https://image.tmdb.org/t/p/w500';
@@ -26,7 +26,6 @@ const modalClose = document.getElementById('modal-close');
 const toastEl = document.getElementById('toast');
 const themeToggleBtn = document.getElementById('theme-toggle');
 const themeToggleIcon = document.getElementById('theme-toggle-icon');
-const themeToggleLabel = document.getElementById('theme-toggle-label');
 const moviesSectionTab = document.getElementById('movies-section-tab');
 const musicSectionTab = document.getElementById('music-section-tab');
 const pageNav = document.querySelector('.section-page-nav');
@@ -89,11 +88,9 @@ function setTheme(theme) {
     if (theme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
         if (themeToggleIcon) themeToggleIcon.textContent = '☀️';
-        if (themeToggleLabel) themeToggleLabel.textContent = 'Light Mode';
     } else {
         document.documentElement.removeAttribute('data-theme');
         if (themeToggleIcon) themeToggleIcon.textContent = '🌙';
-        if (themeToggleLabel) themeToggleLabel.textContent = 'Dark Mode';
     }
     localStorage.setItem('myWay_theme', theme);
 }
@@ -1185,7 +1182,13 @@ if (recognition) {
     recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         searchInput.value = transcript.trim();
-        searchMovies(transcript.trim());
+        if (currentSection === 'music') {
+            if (typeof window.searchMusicGlobal === 'function') {
+                window.searchMusicGlobal(transcript.trim());
+            }
+        } else {
+            searchMovies(transcript.trim());
+        }
     };
 
     recognition.onend = () => {
@@ -1207,36 +1210,6 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(err => console.warn('Service Worker registration failed:', err));
     });
 }
-
-// --- MUSIC BOTTOM NAV ---
-(function setupMusicBottomNav() {
-    const navHome = document.getElementById('music-nav-home');
-    const navLiked = document.getElementById('music-nav-liked');
-    const homeTabBtn = document.getElementById('music-home-tab');
-    const likedTabBtn = document.getElementById('music-liked-tab');
-    if (!navHome || !navLiked) return;
-
-    function setActive(btn) {
-        [navHome, navLiked].forEach(b => {
-            b.classList.toggle('active', b === btn);
-            b.setAttribute('aria-selected', String(b === btn));
-        });
-    }
-
-    navHome.addEventListener('click', () => {
-        setActive(navHome);
-        if (homeTabBtn) homeTabBtn.click();
-    });
-
-    navLiked.addEventListener('click', () => {
-        setActive(navLiked);
-        if (likedTabBtn) likedTabBtn.click();
-    });
-
-    // Keep bottom nav in sync if the (hidden-on-mobile) desktop tabs change
-    if (homeTabBtn) homeTabBtn.addEventListener('click', () => setActive(navHome));
-    if (likedTabBtn) likedTabBtn.addEventListener('click', () => setActive(navLiked));
-})();
 
 // Mirrors the hidden #music-player-seek range onto the slim mobile
 // progress bar under the mini-player, and onto the desktop scrub
