@@ -10,7 +10,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>MyWay</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
-    <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://image.tmdb.org">
     <link rel="preconnect" href="https://api.themoviedb.org">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,7 +17,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/app.css">
 
 </head>
 <body class="music-section-active">
@@ -122,15 +120,15 @@
                 <span class="music-hero-signal-line"></span>
             </div>
         </section>
-        <section id="music-language-filters" aria-labelledby="mood-title">
+        <section id="music-language-filters" aria-labelledby="language-title">
             <div class="music-section-heading">
-                <h3 id="mood-title">Browse by mood</h3>
+                <h3 id="language-title">Explore by language</h3>
             </div>
             <div class="music-moods">
-                <button class="music-mood active" type="button" data-language="all">English</button>
-                <button class="music-mood" type="button" data-language="hindi">Hindi</button>
+                <button class="music-mood active" type="button" data-language="all">Global</button>
+                <button class="music-mood" type="button" data-language="hindi">Bollywood</button>
                 <button class="music-mood" type="button" data-language="punjabi">Punjabi</button>
-                <button class="music-mood" type="button" data-language="other">Other</button>
+                <button class="music-mood" type="button" data-language="other">Regional</button>
             </div>
         </section>
 
@@ -142,10 +140,6 @@
                 <div id="music-discovery-list" class="music-album-grid music-song-list" aria-live="polite"><p class="music-empty-state">Loading today's trending songs...</p></div>
             </section>
 
-            <aside id="music-queue" class="music-queue" aria-labelledby="queue-title" hidden>
-                <h3 id="queue-title">Up next</h3>
-                <p class="music-empty-state">Play a song to load more from that artist.</p>
-            </aside>
         </div>
         </div>
 
@@ -190,9 +184,6 @@
 
         <!-- Right: extra controls, Spotify-web column 3 (hidden on mobile) -->
         <div class="music-player-extras">
-            <button type="button" aria-label="Queue">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h13M3 12h13M3 18h7"/><path d="M17 8v8m0 0 3-3m-3 3-3-3"/></svg>
-            </button>
             <div class="music-player-volume">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M17 8a5 5 0 0 1 0 8"/></svg>
                 <input type="range" min="0" max="100" value="70" aria-label="Volume">
@@ -258,9 +249,6 @@
                 <button type="button" aria-label="Share">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-3.9M8.6 13.5l6.8 3.9"/></svg>
                 </button>
-                <button type="button" aria-label="Queue">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h13M3 12h13M3 18h7"/><path d="M17 8v8m0 0 3-3m-3 3-3-3"/></svg>
-                </button>
             </div>
         </section>
     </div>
@@ -281,7 +269,6 @@
 
 
     <!-- Script imports -->
-    <script type="module" src="js/movies.js"></script>
-    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

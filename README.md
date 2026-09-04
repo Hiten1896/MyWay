@@ -83,17 +83,12 @@ The compiled static assets will be output to `dist/`.
 
 ```
 myway/
-├── frontend/             # Static frontend
-│   ├── index.html        # Main HTML markup
-│   ├── js/
-│   │   ├── app.js        # Music discovery engine & audio player (iTunes API)
-│   │   ├── movies.js     # Movie discovery, spotlight, categories & TMDB API
-│   ├── css/
-│   │   ├── styles.css    # Core design system & theme variables
-│   │   └── app.css       # Supporting animations & layout rules
-│   ├── public/
-│   │   ├── manifest.json # PWA manifest
-│   │   └── sw.js         # Service worker
+├── index.html            # Main HTML markup
+├── js/
+│   ├── app.js            # Music discovery engine & audio player (iTunes API)
+│   └── movies.js         # Movie discovery, spotlight, categories & TMDB API
+├── css/
+│   └── styles.css        # Unified design system and layout rules
 ├── package.json          # Vite scripts and dependencies
 ├── vercel.json           # Vercel deployment configuration
 └── README.md
